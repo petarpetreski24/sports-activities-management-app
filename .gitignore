@@ -1,0 +1,24 @@
+# Environment variables (contains secrets)
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo

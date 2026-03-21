@@ -1,0 +1,24 @@
+namespace SportActivityOrganizer.Application.DTOs.Events;
+
+public record SportEventDto(
+    int Id,
+    int OrganizerId,
+    string OrganizerName,
+    string? OrganizerPhotoUrl,
+    double? OrganizerRating,
+    int SportId,
+    string SportName,
+    string? SportIcon,
+    string Title,
+    string? Description,
+    DateTime EventDate,
+    int DurationMinutes,
+    string LocationAddress,
+    double LocationLat,
+    double LocationLng,
+    int MaxParticipants,
+    int CurrentParticipants,
+    string? MinSkillLevel,
+    string Status,
+    double? AvgRating,
+    DateTime CreatedAt);

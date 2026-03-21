@@ -1,0 +1,208 @@
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using SportActivityOrganizer.Application.DTOs.Admin;
+using SportActivityOrganizer.Application.DTOs.Users;
+using SportActivityOrganizer.Application.Interfaces;
+using SportActivityOrganizer.Application.Interfaces.Persistence;
+using SportActivityOrganizer.Domain.Enums;
+
+namespace SportActivityOrganizer.Infrastructure.Services;
+
+public class AdminService : IAdminService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public AdminService(IUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<AdminStatsDto> GetStatsAsync()
+    {
+        var totalUsers = await _unitOfWork.Users.CountAsync(_ => true);
+        var totalEvents = await _unitOfWork.SportEvents.CountAsync(_ => true);
+        var activeEvents = await _unitOfWork.SportEvents
+            .CountAsync(e => e.Status == EventStatus.Open || e.Status == EventStatus.Full);
+        var totalSports = await _unitOfWork.Sports.CountAsync(_ => true);
+        var totalComments = await _unitOfWork.EventComments.CountAsync(c => !c.IsDeleted);
+        var totalRatings = await _unitOfWork.EventRatings.CountAsync(_ => true);
+
+        var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var newUsersThisMonth = await _unitOfWork.Users.CountAsync(u => u.CreatedAt >= startOfMonth);
+        var newEventsThisMonth = await _unitOfWork.SportEvents.CountAsync(e => e.CreatedAt >= startOfMonth);
+
+        var topSportsRaw = await _unitOfWork.SportEvents.Query()
+            .GroupBy(e => e.SportId)
+            .Select(g => new { SportId = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(5)
+            .ToListAsync();
+
+        var sportNames = await _unitOfWork.Sports.Query()
+            .Where(s => topSportsRaw.Select(x => x.SportId).Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s.Name);
+
+        var topSports = topSportsRaw
+            .Select(x => new TopSportDto(sportNames.GetValueOrDefault(x.SportId, "Unknown"), x.Count))
+            .ToList();
+
+        return new AdminStatsDto(
+            TotalUsers: totalUsers,
+            TotalEvents: totalEvents,
+            ActiveEvents: activeEvents,
+            TotalSports: totalSports,
+            TotalComments: totalComments,
+            TotalRatings: totalRatings,
+            NewUsersThisMonth: newUsersThisMonth,
+            NewEventsThisMonth: newEventsThisMonth,
+            TopSports: topSports);
+    }
+
+    public async Task<(List<AdminUserDto> Items, int TotalCount)> GetUsersAsync(string? search, string? role, int page, int pageSize)
+    {
+        var query = _unitOfWork.Users.Query()
+            .Include(u => u.FavoriteSports)
+                .ThenInclude(fs => fs.Sport)
+            .AsQueryable();
+
+        // Search filter
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(u =>
+                u.FirstName.ToLower().Contains(searchLower) ||
+                u.LastName.ToLower().Contains(searchLower) ||
+                u.Email.ToLower().Contains(searchLower));
+        }
+
+        // Role filter
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            if (Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                query = query.Where(u => u.Role == userRole);
+            }
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        // Batch-load counts to fix N+1 query issue
+        var userIds = users.Select(u => u.Id).ToList();
+
+        var participationCounts = await _unitOfWork.EventApplications.Query()
+            .Where(ea => userIds.Contains(ea.UserId) && ea.Status == ApplicationStatus.Approved)
+            .GroupBy(ea => ea.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count);
+
+        var organizerCounts = await _unitOfWork.SportEvents.Query()
+            .Where(e => userIds.Contains(e.OrganizerId))
+            .GroupBy(e => e.OrganizerId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count);
+
+        var userDtos = new List<AdminUserDto>();
+
+        foreach (var user in users)
+        {
+            participationCounts.TryGetValue(user.Id, out var totalParticipated);
+            organizerCounts.TryGetValue(user.Id, out var totalOrganized);
+
+            userDtos.Add(new AdminUserDto(
+                Id: user.Id,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                Email: user.Email,
+                Phone: user.Phone,
+                Bio: user.Bio,
+                ProfilePhotoUrl: user.ProfilePhotoUrl,
+                LocationCity: user.LocationCity,
+                LocationLat: user.LocationLat.HasValue ? (double)user.LocationLat.Value : null,
+                LocationLng: user.LocationLng.HasValue ? (double)user.LocationLng.Value : null,
+                Role: user.Role.ToString(),
+                IsActive: user.IsActive,
+                EmailConfirmed: user.EmailConfirmed,
+                AvgRatingAsOrganizer: user.AvgRatingAsOrganizer.HasValue ? (double)user.AvgRatingAsOrganizer.Value : null,
+                AvgRatingAsParticipant: user.AvgRatingAsParticipant.HasValue ? (double)user.AvgRatingAsParticipant.Value : null,
+                FavoriteSports: _mapper.Map<List<UserFavoriteSportDto>>(user.FavoriteSports),
+                CreatedAt: user.CreatedAt,
+                TotalEventsParticipated: totalParticipated,
+                TotalEventsOrganized: totalOrganized));
+        }
+
+        return (userDtos, totalCount);
+    }
+
+    public async Task DeactivateUserAsync(int userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+        if (user == null)
+            throw new KeyNotFoundException("User not found.");
+
+        if (user.Role == UserRole.Admin)
+            throw new InvalidOperationException("Cannot deactivate an admin user.");
+
+        user.IsActive = false;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task DeleteUserAsync(int userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+        if (user == null)
+            throw new KeyNotFoundException("User not found.");
+
+        if (user.Role == UserRole.Admin)
+            throw new InvalidOperationException("Cannot delete an admin user.");
+
+        // Cancel all active events organized by this user
+        var activeEvents = await _unitOfWork.SportEvents.Query()
+            .Where(e => e.OrganizerId == userId &&
+                        (e.Status == EventStatus.Open || e.Status == EventStatus.Full))
+            .ToListAsync();
+
+        foreach (var sportEvent in activeEvents)
+        {
+            sportEvent.Status = EventStatus.Cancelled;
+            sportEvent.UpdatedAt = DateTime.UtcNow;
+        }
+
+        _unitOfWork.Users.Remove(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task DeleteEventAsync(int eventId)
+    {
+        var sportEvent = await _unitOfWork.SportEvents.Query()
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (sportEvent == null)
+            throw new KeyNotFoundException("Event not found.");
+
+        _unitOfWork.SportEvents.Remove(sportEvent);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task DeleteCommentAsync(int commentId)
+    {
+        var comment = await _unitOfWork.EventComments.Query()
+            .FirstOrDefaultAsync(c => c.Id == commentId);
+
+        if (comment == null)
+            throw new KeyNotFoundException("Comment not found.");
+
+        comment.IsDeleted = true;
+        await _unitOfWork.SaveChangesAsync();
+    }
+}

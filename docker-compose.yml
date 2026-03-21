@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sao-db
+    environment:
+      POSTGRES_DB: sportactivityorganizer
+      POSTGRES_USER: sao_user
+      POSTGRES_PASSWORD: sao_password_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sao_user -d sportactivityorganizer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sao-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sao-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=sportactivityorganizer;Username=sao_user;Password=sao_password_dev
+      - Jwt__Key=SuperSecretKeyForDevelopment2024SportActivityOrganizer!@#$
+      - Jwt__Issuer=SportActivityOrganizer
+      - Jwt__Audience=SportActivityOrganizerUsers
+      - Jwt__AccessTokenExpirationMinutes=60
+      - Jwt__RefreshTokenExpirationDays=7
+      - Email__SmtpHost=${EMAIL_SMTP_HOST:-smtp.sendgrid.net}
+      - Email__SmtpPort=${EMAIL_SMTP_PORT:-587}
+      - Email__FromEmail=${EMAIL_FROM:-petarpetreski24@gmail.com}
+      - Email__FromName=${EMAIL_FROM_NAME:-TeamUp}
+      - Email__SmtpUsername=${EMAIL_SMTP_USERNAME:-apikey}
+      - Email__SmtpPassword=${SENDGRID_API_KEY}
+      - Email__EnableSsl=${EMAIL_ENABLE_SSL:-true}
+      - App__BaseUrl=${APP_BASE_URL:-http://localhost:5000}
+      - App__FrontendUrl=${APP_FRONTEND_URL:-http://localhost:5173}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL:-http://localhost:5173}
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sao-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_uploads:

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Box, Typography, TextField, Grid, Alert, Avatar,
   Divider, FormControl, InputLabel,
-  Select, MenuItem, Chip, alpha,
+  Select, MenuItem, Chip, alpha, Dialog, DialogContent, DialogActions,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -14,6 +14,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import PlaceIcon from '@mui/icons-material/Place';
 import SportsScoreIcon from '@mui/icons-material/SportsScore';
 import AddIcon from '@mui/icons-material/Add';
+import WavingHandIcon from '@mui/icons-material/WavingHand';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import * as usersApi from '../../api/users';
@@ -55,6 +56,8 @@ const stagger = (index: number) => ({
 export default function EditProfilePage() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showWelcome, setShowWelcome] = useState(searchParams.get('welcome') === 'true');
   const [error, setError] = useState('');
   const [sports, setSports] = useState<Sport[]>([]);
   const [favSports, setFavSports] = useState<FavSport[]>([]);
@@ -274,7 +277,7 @@ export default function EditProfilePage() {
             {favSports.length > 0 && <Divider sx={{ my: 2 }} />}
 
             {/* Add sport form */}
-            <GlassCard sx={{ p: 2, bgcolor: alpha('#f8fafc', 0.6) }}>
+            <GlassCard sx={{ p: 2 }}>
               <Box display="flex" alignItems="center" gap={1} mb={1.5}>
                 <AddIcon sx={{ fontSize: 18, color: '#1a56db' }} />
                 <Typography variant="subtitle2" fontWeight={600}>Додади спорт</Typography>
@@ -308,6 +311,55 @@ export default function EditProfilePage() {
           </GlassCard>
         </motion.div>
       </Box>
+
+      {/* Welcome modal after registration */}
+      <Dialog
+        open={showWelcome}
+        onClose={() => {
+          setShowWelcome(false);
+          setSearchParams({}, { replace: true });
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 1,
+            maxWidth: 440,
+            textAlign: 'center',
+          },
+        }}
+      >
+        <DialogContent sx={{ pt: 4, pb: 2 }}>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
+            <Box
+              sx={{
+                width: 72, height: 72, borderRadius: '50%', mx: 'auto', mb: 2,
+                background: 'linear-gradient(135deg, #1a56db, #059669)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(26,86,219,0.25)',
+              }}
+            >
+              <WavingHandIcon sx={{ fontSize: 36, color: 'white' }} />
+            </Box>
+          </motion.div>
+          <Typography variant="h5" fontWeight={700} mb={1}>
+            Добредојде, {user?.firstName}!
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+            Твојата сметка е креирана. Пополни го профилот — додади слика, биографија, локација и омилени спортови за полесно поврзување со играчите.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
+          <GradientButton
+            onClick={() => {
+              setShowWelcome(false);
+              setSearchParams({}, { replace: true });
+            }}
+            sx={{ px: 5, py: 1.2, borderRadius: 3 }}
+          >
+            Ајде!
+          </GradientButton>
+        </DialogActions>
+      </Dialog>
     </AnimatedPage>
   );
 }

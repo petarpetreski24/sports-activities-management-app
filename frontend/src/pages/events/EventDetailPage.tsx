@@ -48,10 +48,15 @@ export default function EventDetailPage() {
   const [error, setError] = useState('');
   const [applySuccess, setApplySuccess] = useState(false);
 
+  const { isAdmin } = useAuth();
   const isOrganizer = user?.id === event?.organizerId;
-  const isApproved = myApplication?.status === 'Approved' || isOrganizer;
+  const canManage = isOrganizer || isAdmin;
+  const isApproved = myApplication?.status === 'Approved' || isOrganizer || isAdmin;
   const hasActiveApplication = myApplication?.status === 'Pending' || myApplication?.status === 'Approved';
   const isCompleted = event?.status === 'Completed';
+  const isCancelled = event?.status === 'Cancelled';
+  const minutesToStart = event ? dayjs(event.eventDate).diff(dayjs(), 'minute') : Infinity;
+  const canApply = minutesToStart > 10;
   const canRate = isCompleted && isApproved && !ratings.some(r => r.reviewerId === user?.id) &&
     dayjs().diff(dayjs(event?.eventDate).add(event?.durationMinutes || 0, 'minute'), 'day') <= 7;
 
@@ -60,9 +65,9 @@ export default function EventDetailPage() {
     try {
       const { data: ev } = await eventsApi.getById(parseInt(id));
       setEvent(ev);
-      const isOrg = user?.id === ev.organizerId;
+      const isOrgOrAdmin = user?.id === ev.organizerId || user?.role === 'Admin';
       if (isAuthenticated) {
-        if (isOrg) {
+        if (isOrgOrAdmin) {
           try { const { data: apps } = await applicationsApi.getEventApplications(parseInt(id)); setApplications(apps); } catch { }
         } else {
           try { const { data: myApp } = await applicationsApi.getMyApplication(parseInt(id)); setMyApplication(myApp || null); } catch { }
@@ -180,7 +185,7 @@ export default function EventDetailPage() {
                 sx={{ fontWeight: 600 }}
               />
             </Box>
-            {isOrganizer && event.status !== 'Completed' && event.status !== 'Cancelled' && (
+            {canManage && event.status !== 'Completed' && event.status !== 'Cancelled' && (
               <Box display="flex" gap={1}>
                 <Button
                   size="small"
@@ -231,8 +236,9 @@ export default function EventDetailPage() {
                     px: 1.5,
                     py: 0.75,
                     borderRadius: 2,
-                    bgcolor: alpha('#fff', 0.7),
-                    border: `1px solid ${alpha('#1a56db', 0.08)}`,
+                    bgcolor: 'action.hover',
+                    border: `1px solid`,
+                    borderColor: 'divider',
                     maxWidth: { xs: '100%', sm: 'auto' },
                   }}
                 >
@@ -297,31 +303,33 @@ export default function EventDetailPage() {
               ].map((item, i) => (
                 <Grid size={{ xs: 6, sm: 4 }} key={i}>
                   <Tooltip title={item.value} arrow enterDelay={300} placement="top">
-                    <GlassCard hoverEffect={false} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2 }}>
-                      <Box
-                        sx={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: '50%',
-                          background: `linear-gradient(135deg, ${alpha('#1a56db', 0.1)}, ${alpha('#059669', 0.1)})`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#1a56db',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {item.icon}
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                          {item.label}
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600} noWrap>
-                          {item.value}
-                        </Typography>
-                      </Box>
-                    </GlassCard>
+                    <Box>
+                      <GlassCard hoverEffect={false} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2 }}>
+                        <Box
+                          sx={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: '50%',
+                            background: `linear-gradient(135deg, ${alpha('#1a56db', 0.1)}, ${alpha('#059669', 0.1)})`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#1a56db',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {item.icon}
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            {item.label}
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600} noWrap>
+                            {item.value}
+                          </Typography>
+                        </Box>
+                      </GlassCard>
+                    </Box>
                   </Tooltip>
                 </Grid>
               ))}
@@ -344,19 +352,25 @@ export default function EventDetailPage() {
           </motion.div>
 
           {/* Apply Button */}
-          {isAuthenticated && !isOrganizer && event.status === 'Open' && !hasActiveApplication && (
+          {isAuthenticated && !canManage && event.status === 'Open' && !hasActiveApplication && (
             <Box sx={{ mb: 3 }}>
-              <GradientButton
-                fullWidth
-                gradientFrom="#059669"
-                gradientTo="#16a34a"
-                hoverFrom="#064e3b"
-                hoverTo="#059669"
-                onClick={handleApply}
-                sx={{ py: 1.8, fontSize: '1.05rem', borderRadius: 3 }}
-              >
-                Пријави се на настанот
-              </GradientButton>
+              {canApply ? (
+                <GradientButton
+                  fullWidth
+                  gradientFrom="#059669"
+                  gradientTo="#16a34a"
+                  hoverFrom="#064e3b"
+                  hoverTo="#059669"
+                  onClick={handleApply}
+                  sx={{ py: 1.8, fontSize: '1.05rem', borderRadius: 3 }}
+                >
+                  Пријави се на настанот
+                </GradientButton>
+              ) : (
+                <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                  Пријавувањето е затворено — настанот започнува за помалку од 10 минути.
+                </Alert>
+              )}
             </Box>
           )}
 
@@ -366,7 +380,7 @@ export default function EventDetailPage() {
               <Alert
                 severity={myApplication.status === 'Approved' ? 'success' : myApplication.status === 'Pending' ? 'info' : 'warning'}
                 sx={{ mb: 3, borderRadius: 3 }}
-                action={hasActiveApplication ? <Button size="small" color="inherit" onClick={handleCancelApplication}>Откажи</Button> : undefined}
+                action={hasActiveApplication && canApply ? <Button size="small" color="inherit" onClick={handleCancelApplication}>Откажи</Button> : undefined}
               >
                 Статус: <strong>{myApplication.status === 'Approved' ? 'Одобрена' : myApplication.status === 'Pending' ? 'Чека одобрување...' : myApplication.status === 'Rejected' ? 'Одбиена' : 'Откажана'}</strong>
               </Alert>
@@ -486,7 +500,7 @@ export default function EventDetailPage() {
             </motion.div>
           )}
 
-          {/* Ratings Section - Compact scrollable */}
+          {/* Ratings Section */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <SectionHeader
               icon={<Star />}
@@ -494,91 +508,105 @@ export default function EventDetailPage() {
               subtitle={event.avgRating ? `Просечна оценка: ${event.avgRating.toFixed(1)}` : undefined}
               count={ratings.length}
             />
-            {ratings.length === 0 && !canRate && (
-              <EmptyState
-                icon={<Star />}
-                title="Нема оценки"
-                description="Овој настан сеуште нема оценки од учесниците."
-              />
-            )}
-            {ratings.length > 0 && (
-              <GlassCard sx={{ mb: 3, p: 2 }}>
-                <Box
-                  sx={{
-                    maxHeight: 280,
-                    overflowY: 'auto',
-                    pr: 1,
-                    '&::-webkit-scrollbar': { width: 4 },
-                    '&::-webkit-scrollbar-thumb': {
-                      borderRadius: 2,
-                      bgcolor: alpha('#1a56db', 0.2),
-                    },
-                  }}
-                >
-                  {ratings.map((r, i) => (
+            {!isCompleted ? (
+              <GlassCard hoverEffect={false} sx={{ mb: 3, textAlign: 'center', py: 4 }}>
+                <Star sx={{ fontSize: 40, color: alpha('#f59e0b', 0.4), mb: 1 }} />
+                <Typography variant="body1" fontWeight={600} mb={0.5}>
+                  Оценувањето е достапно по завршување на настанот
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  По завршување ќе можете да го оцените настанот и учесниците.
+                </Typography>
+              </GlassCard>
+            ) : (
+              <>
+                {ratings.length === 0 && !canRate && (
+                  <EmptyState
+                    icon={<Star />}
+                    title="Нема оценки"
+                    description="Овој настан сеуште нема оценки од учесниците."
+                  />
+                )}
+                {ratings.length > 0 && (
+                  <GlassCard sx={{ mb: 3, p: 2 }}>
                     <Box
-                      key={r.id}
                       sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 1.5,
-                        py: 1.5,
-                        borderBottom: i < ratings.length - 1 ? `1px solid ${alpha('#1a56db', 0.06)}` : 'none',
+                        maxHeight: 280,
+                        overflowY: 'auto',
+                        pr: 1,
+                        '&::-webkit-scrollbar': { width: 4 },
+                        '&::-webkit-scrollbar-thumb': {
+                          borderRadius: 2,
+                          bgcolor: alpha('#1a56db', 0.2),
+                        },
                       }}
                     >
-                      <Avatar
-                        src={r.reviewerPhotoUrl}
-                        sx={{ width: 32, height: 32, cursor: 'pointer', mt: 0.25 }}
-                        onClick={() => navigate(`/users/${r.reviewerId}`)}
-                      >
-                        {r.reviewerName[0]}
-                      </Avatar>
-                      <Box flex={1} minWidth={0}>
-                        <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
-                          <Typography
-                            variant="body2"
-                            sx={{ cursor: 'pointer', fontWeight: 700, '&:hover': { color: 'primary.main' } }}
+                      {ratings.map((r, i) => (
+                        <Box
+                          key={r.id}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            py: 1.5,
+                            borderBottom: i < ratings.length - 1 ? `1px solid ${alpha('#1a56db', 0.06)}` : 'none',
+                          }}
+                        >
+                          <Avatar
+                            src={r.reviewerPhotoUrl}
+                            sx={{ width: 32, height: 32, cursor: 'pointer', mt: 0.25 }}
                             onClick={() => navigate(`/users/${r.reviewerId}`)}
                           >
-                            {r.reviewerName}
-                          </Typography>
-                          <Rating value={r.rating} readOnly size="small" />
-                          <Typography variant="caption" color="text.secondary">
-                            {dayjs(r.createdAt).format('DD.MM.YYYY')}
-                          </Typography>
+                            {r.reviewerName[0]}
+                          </Avatar>
+                          <Box flex={1} minWidth={0}>
+                            <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
+                              <Typography
+                                variant="body2"
+                                sx={{ cursor: 'pointer', fontWeight: 700, '&:hover': { color: 'primary.main' } }}
+                                onClick={() => navigate(`/users/${r.reviewerId}`)}
+                              >
+                                {r.reviewerName}
+                              </Typography>
+                              <Rating value={r.rating} readOnly size="small" />
+                              <Typography variant="caption" color="text.secondary">
+                                {dayjs(r.createdAt).format('DD.MM.YYYY')}
+                              </Typography>
+                            </Box>
+                            {r.comment && (
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: 13 }}>
+                                {r.comment}
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
-                        {r.comment && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: 13 }}>
-                            {r.comment}
-                          </Typography>
-                        )}
-                      </Box>
+                      ))}
                     </Box>
-                  ))}
-                </Box>
-              </GlassCard>
-            )}
-            {canRate && (
-              <GlassCard variant="gradient" sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" mb={1} fontWeight={700}>Оцени го настанот</Typography>
-                <Rating value={ratingValue} onChange={(_, v) => setRatingValue(v || 0)} size="large" />
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Коментар (опционално)"
-                  value={ratingComment}
-                  onChange={e => setRatingComment(e.target.value)}
-                  sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                />
-                <GradientButton
-                  size="small"
-                  onClick={handleRate}
-                  disabled={!ratingValue}
-                  sx={{ mt: 1.5, borderRadius: 2 }}
-                >
-                  Испрати
-                </GradientButton>
-              </GlassCard>
+                  </GlassCard>
+                )}
+                {canRate && (
+                  <GlassCard variant="gradient" sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" mb={1} fontWeight={700}>Оцени го настанот</Typography>
+                    <Rating value={ratingValue} onChange={(_, v) => setRatingValue(v || 0)} size="large" />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Коментар (опционално)"
+                      value={ratingComment}
+                      onChange={e => setRatingComment(e.target.value)}
+                      sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                    <GradientButton
+                      size="small"
+                      onClick={handleRate}
+                      disabled={!ratingValue}
+                      sx={{ mt: 1.5, borderRadius: 2 }}
+                    >
+                      Испрати
+                    </GradientButton>
+                  </GlassCard>
+                )}
+              </>
             )}
           </motion.div>
 
@@ -708,8 +736,8 @@ export default function EventDetailPage() {
             </GlassCard>
           </motion.div>
 
-          {/* Applications List (Organizer only) */}
-          {isOrganizer && (
+          {/* Applications List (Organizer or Admin) */}
+          {canManage && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
               <SectionHeader icon={<Person />} title="Пријави" count={applications.length} />
               {applications.length === 0 ? (
@@ -719,29 +747,58 @@ export default function EventDetailPage() {
                   description="Сеуште нема пријавени учесници за овој настан."
                 />
               ) : (
-                <GlassCard sx={{ p: 1 }}>
-                  <List dense>
+                <GlassCard sx={{ p: 1.5 }}>
+                  <Box display="flex" flexDirection="column" gap={0.75}>
                     {applications.map(app => (
-                      <ListItem
+                      <Box
                         key={app.id}
+                        display="flex"
+                        alignItems="center"
+                        gap={1.5}
                         sx={{
                           borderRadius: 2,
-                          mb: 0.5,
+                          py: 1.25,
+                          px: 1.5,
                           bgcolor: alpha('#1a56db', 0.02),
                           '&:hover': { bgcolor: alpha('#1a56db', 0.05) },
+                          transition: 'background 0.2s',
                         }}
-                        secondaryAction={
-                          !isCompleted && app.status === 'Pending' ? (
-                            <Box>
+                      >
+                        <Avatar
+                          src={app.userPhotoUrl}
+                          sx={{ cursor: 'pointer', width: 38, height: 38, flexShrink: 0 }}
+                          onClick={() => navigate(`/users/${app.userId}`)}
+                        >
+                          {app.userName[0]}
+                        </Avatar>
+                        <Box flex={1} minWidth={0}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            noWrap
+                            sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
+                            onClick={() => navigate(`/users/${app.userId}`)}
+                          >
+                            {app.userName}
+                          </Typography>
+                          {app.userAvgRating ? (
+                            <Typography variant="caption" color="text.secondary">
+                              {app.userAvgRating.toFixed(1)} ★
+                            </Typography>
+                          ) : null}
+                        </Box>
+                        <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
+                          {!isCompleted && app.status === 'Pending' ? (
+                            <>
                               <IconButton size="small" color="success" onClick={() => applicationsApi.approve(event.id, app.id).then(load)}>
                                 <CheckCircle />
                               </IconButton>
                               <IconButton size="small" color="error" onClick={() => applicationsApi.reject(event.id, app.id).then(load)}>
                                 <Cancel />
                               </IconButton>
-                            </Box>
+                            </>
                           ) : app.status === 'Approved' ? (
-                            <Box display="flex" alignItems="center" gap={0.5}>
+                            <>
                               <Chip size="small" label="Одобрен" color="success" sx={{ fontWeight: 600 }} />
                               {!isCompleted && (
                                 <IconButton
@@ -753,37 +810,14 @@ export default function EventDetailPage() {
                                   <Delete fontSize="small" />
                                 </IconButton>
                               )}
-                            </Box>
+                            </>
                           ) : (
                             <Chip size="small" label={app.status === 'Rejected' ? 'Одбиен' : app.status} />
-                          )
-                        }
-                      >
-                        <ListItemAvatar>
-                          <Avatar
-                            src={app.userPhotoUrl}
-                            sx={{ cursor: 'pointer' }}
-                            onClick={() => navigate(`/users/${app.userId}`)}
-                          >
-                            {app.userName[0]}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography
-                              variant="body2"
-                              fontWeight={600}
-                              sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-                              onClick={() => navigate(`/users/${app.userId}`)}
-                            >
-                              {app.userName}
-                            </Typography>
-                          }
-                          secondary={app.userAvgRating ? `${app.userAvgRating.toFixed(1)} ★` : undefined}
-                        />
-                      </ListItem>
+                          )}
+                        </Box>
+                      </Box>
                     ))}
-                  </List>
+                  </Box>
                 </GlassCard>
               )}
             </motion.div>

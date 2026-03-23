@@ -28,15 +28,21 @@ interface NotificationItem {
   referenceEventId?: number; isRead: boolean; createdAt: string;
 }
 
+const PAGE_SIZE = 20;
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [allNotifications, setAllNotifications] = useState<NotificationItem[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const notifications = allNotifications.slice(0, visibleCount);
+  const hasMore = visibleCount < allNotifications.length;
+
   const fetchNotifications = () => {
     notificationsApi.getAll()
-      .then(res => setNotifications(res.data))
+      .then(res => setAllNotifications(res.data))
       .catch(() => setError('Грешка при вчитување.'))
       .finally(() => setLoading(false));
   };
@@ -46,14 +52,14 @@ export default function NotificationsPage() {
   const markAsRead = async (id: number) => {
     try {
       await notificationsApi.markAsRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setAllNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch { }
   };
 
   const markAllAsRead = async () => {
     try {
       await notificationsApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setAllNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch { }
   };
 
@@ -62,7 +68,7 @@ export default function NotificationsPage() {
     if (n.referenceEventId) navigate(`/events/${n.referenceEventId}`);
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = allNotifications.filter(n => !n.isRead).length;
 
   return (
     <AnimatedPage>
@@ -88,75 +94,98 @@ export default function NotificationsPage() {
 
         {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>{error}</Alert>}
 
-        {loading ? null : notifications.length === 0 ? (
+        {loading ? null : allNotifications.length === 0 ? (
           <EmptyState
             icon={<NotificationsOffIcon />}
             title="Нема нотификации"
             description="Немате нотификации. Кога ќе се случи нешто ново, ќе ве известиме овде."
           />
         ) : (
-          <GlassCard noPadding>
-            <List disablePadding>
-              <AnimatePresence>
-                {notifications.map((n, i) => (
-                  <motion.div
-                    key={n.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                  >
-                    {i > 0 && <Divider />}
-                    <ListItem
-                      disablePadding
-                      secondaryAction={
-                        !n.isRead ? (
-                          <IconButton size="small" onClick={() => markAsRead(n.id)} title="Означи"
-                            sx={{ bgcolor: alpha('#1a56db', 0.08) }}>
-                            <CheckIcon fontSize="small" />
-                          </IconButton>
-                        ) : undefined
-                      }
+          <>
+            <GlassCard noPadding>
+              <List disablePadding>
+                <AnimatePresence>
+                  {notifications.map((n, i) => (
+                    <motion.div
+                      key={n.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: Math.min(i, 10) * 0.04 }}
                     >
-                      <ListItemButton
-                        onClick={() => handleClick(n)}
-                        sx={{
-                          borderLeft: n.isRead
-                            ? '3px solid transparent'
-                            : '3px solid',
-                          borderImage: n.isRead
-                            ? undefined
-                            : 'linear-gradient(180deg, #1a56db, #059669) 1',
-                          bgcolor: n.isRead ? 'transparent' : alpha('#1a56db', 0.04),
-                          transition: 'all 0.3s ease',
-                          '&:hover': { bgcolor: alpha('#1a56db', 0.06) },
-                        }}
+                      {i > 0 && <Divider />}
+                      <ListItem
+                        disablePadding
+                        secondaryAction={
+                          !n.isRead ? (
+                            <IconButton size="small" onClick={() => markAsRead(n.id)} title="Означи"
+                              sx={{ bgcolor: alpha('#1a56db', 0.08) }}>
+                              <CheckIcon fontSize="small" />
+                            </IconButton>
+                          ) : undefined
+                        }
                       >
-                        <ListItemIcon>
-                          <Box sx={{
-                            width: 40, height: 40, borderRadius: 2,
-                            bgcolor: n.isRead ? alpha('#888', 0.1) : alpha('#1a56db', 0.1),
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <NotificationsIcon color={n.isRead ? 'disabled' : 'primary'} fontSize="small" />
-                          </Box>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={<Typography fontWeight={n.isRead ? 400 : 700} variant="body2">{n.title}</Typography>}
-                          secondary={
-                            <>
-                              {n.message}
-                              <br />
-                              <Typography variant="caption" color="text.secondary">{dayjs(n.createdAt).fromNow()}</Typography>
-                            </>
-                          }
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </List>
-          </GlassCard>
+                        <ListItemButton
+                          onClick={() => handleClick(n)}
+                          sx={{
+                            borderLeft: n.isRead
+                              ? '3px solid transparent'
+                              : '3px solid',
+                            borderImage: n.isRead
+                              ? undefined
+                              : 'linear-gradient(180deg, #1a56db, #059669) 1',
+                            bgcolor: n.isRead ? 'transparent' : alpha('#1a56db', 0.04),
+                            transition: 'all 0.3s ease',
+                            '&:hover': { bgcolor: alpha('#1a56db', 0.06) },
+                          }}
+                        >
+                          <ListItemIcon>
+                            <Box sx={{
+                              width: 40, height: 40, borderRadius: 2,
+                              bgcolor: n.isRead ? alpha('#888', 0.1) : alpha('#1a56db', 0.1),
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <NotificationsIcon color={n.isRead ? 'disabled' : 'primary'} fontSize="small" />
+                            </Box>
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={<Typography fontWeight={n.isRead ? 400 : 700} variant="body2">{n.title}</Typography>}
+                            secondary={
+                              <>
+                                {n.message}
+                                <br />
+                                <Typography variant="caption" color="text.secondary">{dayjs(n.createdAt).fromNow()}</Typography>
+                              </>
+                            }
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </List>
+            </GlassCard>
+
+            {hasMore && (
+              <Box textAlign="center" mt={2}>
+                <GradientButton
+                  onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+                  variant="outlined"
+                  sx={{
+                    background: 'transparent',
+                    border: `1px solid ${alpha('#1a56db', 0.2)}`,
+                    color: '#1a56db',
+                    '&:hover': { background: alpha('#1a56db', 0.06), border: `1px solid ${alpha('#1a56db', 0.3)}` },
+                  }}
+                >
+                  Прикажи постари ({allNotifications.length - visibleCount} преостанати)
+                </GradientButton>
+              </Box>
+            )}
+
+            <Typography variant="caption" color="text.secondary" textAlign="center" display="block" mt={1}>
+              Прикажани {notifications.length} од {allNotifications.length} нотификации
+            </Typography>
+          </>
         )}
       </Box>
     </AnimatedPage>

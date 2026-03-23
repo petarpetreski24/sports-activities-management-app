@@ -19,7 +19,7 @@ public class EmailService : IEmailService
         var smtpHost = _configuration["Email:SmtpHost"] ?? "smtp.sendgrid.net";
         var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
         var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@sportactivityorganizer.com";
-        var fromName = _configuration["Email:FromName"] ?? "TeamUp";
+        var fromName = _configuration["Email:FromName"] ?? "EkipAY";
         var smtpUsername = _configuration["Email:SmtpUsername"];
         var smtpPassword = _configuration["Email:SmtpPassword"];
 
@@ -51,9 +51,9 @@ public class EmailService : IEmailService
         var baseUrl = _configuration["App:BaseUrl"] ?? "http://localhost:5000";
         var confirmationLink = $"{baseUrl}/api/auth/confirm-email?token={token}";
 
-        var subject = "Потврдете ја вашата е-пошта - TeamUp";
+        var subject = "Потврдете ја вашата е-пошта - EkipAY";
         var htmlBody = BuildEmailTemplate(
-            "Добредојдовте на TeamUp! 🏆",
+            "Добредојдовте на EkipAY! 🏆",
             $@"
                 <p style='color: #475569; font-size: 16px; line-height: 1.7;'>
                     Ви благодариме што се регистриравте! Потврдете ја вашата е-пошта со кликнување на копчето подолу:
@@ -80,7 +80,7 @@ public class EmailService : IEmailService
         var baseUrl = _configuration["App:FrontendUrl"] ?? _configuration["App:BaseUrl"] ?? "http://localhost:5173";
         var resetLink = $"{baseUrl}/reset-password?token={token}";
 
-        var subject = "Ресетирање на лозинка - TeamUp";
+        var subject = "Ресетирање на лозинка - EkipAY";
         var htmlBody = BuildEmailTemplate(
             "Ресетирање на лозинка 🔑",
             $@"
@@ -117,7 +117,7 @@ public class EmailService : IEmailService
                 </p>"
         );
 
-        await SendEmailAsync(to, $"{subject} - TeamUp", htmlBody);
+        await SendEmailAsync(to, $"{subject} - EkipAY", htmlBody);
     }
 
     private static string BuildEmailTemplate(string heading, string bodyContent)
@@ -142,7 +142,7 @@ public class EmailService : IEmailService
                                             display: inline-block; text-align: center; line-height: 44px; font-size: 20px; color: white;'>
                                     &#9917;
                                 </div>
-                                <span style='font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;'>TeamUp</span>
+                                <span style='font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;'>EkipAY</span>
                             </div>
                         </td>
                     </tr>
@@ -160,7 +160,7 @@ public class EmailService : IEmailService
                     <tr>
                         <td align='center' style='padding: 32px 0 0 0;'>
                             <p style='color: #94a3b8; font-size: 12px; margin: 0;'>
-                                &copy; 2026 TeamUp. Сите права се задржани.
+                                &copy; 2026 EkipAY. Сите права се задржани.
                             </p>
                             <p style='color: #cbd5e1; font-size: 11px; margin: 8px 0 0 0;'>
                                 Најди тим. Играј. Победи.

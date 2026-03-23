@@ -23,7 +23,7 @@ export default function RegisterPage() {
       setError('');
       await registerUser(data.firstName, data.lastName, data.email, data.password);
       setSuccess('Регистрацијата е успешна! Проверете го вашиот email за потврда.');
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/profile/edit?welcome=true'), 2000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Грешка при регистрација.');
     }

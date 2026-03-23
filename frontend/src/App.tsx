@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -8,6 +9,9 @@ import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ConfirmEmailPage from './pages/auth/ConfirmEmailPage';
+
+// Landing
+import LandingPage from './pages/LandingPage';
 
 // Main pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -30,10 +34,20 @@ import NotificationPreferencesPage from './pages/notifications/NotificationPrefe
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import ManageSportsPage from './pages/admin/ManageSportsPage';
+import ManageEventsPage from './pages/admin/ManageEventsPage';
+
+function HomeRedirect() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+}
 
 export default function App() {
   return (
     <Routes>
+      {/* Landing page for unauthenticated, dashboard for authenticated */}
+      <Route path="/" element={<HomeRedirect />} />
+
       {/* Public auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -65,11 +79,11 @@ export default function App() {
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute adminOnly><ManageUsersPage /></ProtectedRoute>} />
         <Route path="/admin/sports" element={<ProtectedRoute adminOnly><ManageSportsPage /></ProtectedRoute>} />
+        <Route path="/admin/events" element={<ProtectedRoute adminOnly><ManageEventsPage /></ProtectedRoute>} />
       </Route>
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

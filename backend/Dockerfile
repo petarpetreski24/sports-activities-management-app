@@ -21,6 +21,11 @@ RUN mkdir -p /app/wwwroot/uploads/profiles
 
 COPY --from=build /app/publish .
 
-EXPOSE 5000
+# Railway injects PORT; default to 5000 for local
+ENV PORT=5000
+ENV ASPNETCORE_ENVIRONMENT=Production
 
-ENTRYPOINT ["dotnet", "SportActivityOrganizer.API.dll"]
+EXPOSE ${PORT}
+
+# Use shell form so $PORT is expanded at runtime
+CMD ASPNETCORE_URLS=http://+:${PORT} dotnet SportActivityOrganizer.API.dll

@@ -8,14 +8,17 @@ import {
 import {
   Menu as MenuIcon, Notifications as NotifIcon, Diversity3,
   Dashboard, Event, Add, Person, ExitToApp, AdminPanelSettings, EventNote,
-  Close,
+  Close, DarkMode, LightMode,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import * as notificationsApi from '../api/notifications';
 
 export default function Layout() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { mode, toggleTheme } = useThemeMode();
+  const isDark = mode === 'dark';
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -87,7 +90,7 @@ export default function Layout() {
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
               }}>
-              TeamUp
+              EkipAY
             </Typography>
           </motion.div>
 
@@ -162,7 +165,16 @@ export default function Layout() {
           )}
 
           {!isAuthenticated ? (
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Tooltip title={isDark ? 'Светла тема' : 'Темна тема'}>
+                <IconButton
+                  color="inherit"
+                  onClick={toggleTheme}
+                  sx={{ '&:hover': { bgcolor: alpha('#fff', 0.08) } }}
+                >
+                  {isDark ? <LightMode /> : <DarkMode />}
+                </IconButton>
+              </Tooltip>
               <Button color="inherit" component={RouterLink} to="/login" sx={{ borderRadius: 2 }}>
                 Најава
               </Button>
@@ -184,6 +196,15 @@ export default function Layout() {
             </Box>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Tooltip title={isDark ? 'Светла тема' : 'Темна тема'}>
+                <IconButton
+                  color="inherit"
+                  onClick={toggleTheme}
+                  sx={{ '&:hover': { bgcolor: alpha('#fff', 0.08) } }}
+                >
+                  {isDark ? <LightMode /> : <DarkMode />}
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Нотификации">
                 <IconButton
                   color="inherit"
@@ -248,10 +269,12 @@ export default function Layout() {
                     mt: 1.5,
                     minWidth: 220,
                     borderRadius: 3,
-                    bgcolor: alpha('#fff', 0.95),
+                    bgcolor: isDark ? alpha('#1e293b', 0.95) : alpha('#fff', 0.95),
                     backdropFilter: 'blur(20px)',
-                    border: `1px solid ${alpha('#1a56db', 0.08)}`,
-                    boxShadow: `0 20px 50px ${alpha('#1a56db', 0.12)}`,
+                    border: `1px solid ${isDark ? alpha('#fff', 0.08) : alpha('#1a56db', 0.08)}`,
+                    boxShadow: isDark
+                      ? `0 20px 50px ${alpha('#000', 0.4)}`
+                      : `0 20px 50px ${alpha('#1a56db', 0.12)}`,
                     overflow: 'visible',
                     '&::before': {
                       content: '""',
@@ -260,9 +283,9 @@ export default function Layout() {
                       right: 16,
                       width: 12,
                       height: 12,
-                      bgcolor: alpha('#fff', 0.95),
+                      bgcolor: isDark ? alpha('#1e293b', 0.95) : alpha('#fff', 0.95),
                       transform: 'rotate(45deg)',
-                      border: `1px solid ${alpha('#1a56db', 0.08)}`,
+                      border: `1px solid ${isDark ? alpha('#fff', 0.08) : alpha('#1a56db', 0.08)}`,
                       borderBottom: 'none',
                       borderRight: 'none',
                     },
@@ -351,7 +374,7 @@ export default function Layout() {
             >
               <Diversity3 sx={{ fontSize: 18 }} />
             </Box>
-            <Typography variant="h6" fontWeight={800}>TeamUp</Typography>
+            <Typography variant="h6" fontWeight={800}>EkipAY</Typography>
           </Box>
           <IconButton onClick={() => setDrawerOpen(false)} size="small"><Close /></IconButton>
         </Box>
@@ -447,7 +470,7 @@ export default function Layout() {
           }}
         >
           <Typography variant="body2" fontWeight={500}>
-            TeamUp &copy; 2026
+            EkipAY &copy; 2026
           </Typography>
         </Box>
       </Box>

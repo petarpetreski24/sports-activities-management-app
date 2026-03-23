@@ -4,44 +4,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   SportsSoccer, SportsBasketball, SportsTennis, SportsVolleyball,
   SportsHandball, FitnessCenter, Pool, DirectionsRun,
-  Star, ChatBubble, Place, Group, Diversity3,
+  Star, Place, Group, Diversity3,
 } from '@mui/icons-material';
 
-// Simplified Macedonia map SVG path
-const MACEDONIA_PATH = `M 120 60 L 155 45 L 195 38 L 230 42 L 268 35 L 310 45 L 345 55 L 370 70 L 385 95 L 390 125 L 380 155 L 365 175 L 340 190 L 310 200 L 275 210 L 240 215 L 200 212 L 165 205 L 135 192 L 110 175 L 95 150 L 88 125 L 92 95 L 105 75 Z`;
+// More accurate Macedonia map SVG path based on actual border shape
+const MACEDONIA_PATH = `M 168 42 L 185 38 L 205 36 L 225 38 L 248 34 L 270 38 L 290 42 L 308 38 L 325 42 L 340 50 L 355 60 L 365 72 L 372 85 L 378 100 L 382 115 L 380 130 L 375 145 L 368 158 L 358 168 L 345 178 L 330 186 L 315 192 L 298 198 L 280 205 L 265 210 L 248 212 L 230 210 L 212 208 L 195 210 L 178 208 L 160 200 L 145 192 L 132 182 L 118 168 L 108 155 L 100 140 L 95 125 L 92 110 L 95 95 L 100 82 L 108 70 L 120 58 L 132 50 L 148 44 Z`;
 
-// Cities with approximate positions on the map
+// Cities with positions matching the accurate map outline
 const CITIES = [
-  { name: 'Скопје', x: 230, y: 80, size: 10 },
-  { name: 'Битола', x: 175, y: 190, size: 7 },
-  { name: 'Охрид', x: 120, y: 170, size: 7 },
-  { name: 'Прилеп', x: 200, y: 165, size: 6 },
-  { name: 'Тетово', x: 175, y: 65, size: 6 },
-  { name: 'Куманово', x: 285, y: 55, size: 6 },
-  { name: 'Штип', x: 310, y: 115, size: 6 },
-  { name: 'Велес', x: 255, y: 110, size: 5 },
-  { name: 'Струмица', x: 345, y: 175, size: 5 },
-  { name: 'Гевгелија', x: 295, y: 205, size: 5 },
-  { name: 'Кочани', x: 340, y: 100, size: 5 },
-  { name: 'Струга', x: 105, y: 155, size: 5 },
+  { name: 'Скопје', x: 240, y: 75, size: 10 },
+  { name: 'Битола', x: 185, y: 190, size: 7 },
+  { name: 'Охрид', x: 132, y: 168, size: 7 },
+  { name: 'Прилеп', x: 215, y: 165, size: 6 },
+  { name: 'Тетово', x: 185, y: 62, size: 6 },
+  { name: 'Куманово', x: 290, y: 58, size: 6 },
+  { name: 'Штип', x: 315, y: 110, size: 6 },
+  { name: 'Велес', x: 260, y: 108, size: 5 },
+  { name: 'Струмица', x: 348, y: 165, size: 5 },
+  { name: 'Гевгелија', x: 288, y: 200, size: 5 },
+  { name: 'Кочани', x: 340, y: 95, size: 5 },
+  { name: 'Струга', x: 118, y: 155, size: 5 },
 ];
 
 const SPORT_ICONS = [
   SportsSoccer, SportsBasketball, SportsTennis, SportsVolleyball,
   SportsHandball, FitnessCenter, Pool, DirectionsRun,
-];
-
-const COMMENTS = [
-  { text: 'Одличен настан! ⭐⭐⭐⭐⭐', author: 'Марко' },
-  { text: 'Супер организација!', author: 'Ана' },
-  { text: 'Најдобар турнир годинава!', author: 'Стефан' },
-  { text: 'Неверојатна атмосфера!', author: 'Ивана' },
-  { text: 'Одлични играчи, фер игра.', author: 'Дејан' },
-  { text: 'Ве очекувам повторно! 🏆', author: 'Мила' },
-  { text: 'Перфектна локација!', author: 'Борис' },
-  { text: '10/10 би играл повторно!', author: 'Елена' },
-  { text: 'Врвно ниво на натпревар!', author: 'Горан' },
-  { text: 'Прекрасно искуство! 🎉', author: 'Тамара' },
 ];
 
 const SPORT_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
@@ -56,16 +43,8 @@ interface FloatingIcon {
   duration: number;
 }
 
-interface CommentBubble {
-  id: number;
-  comment: typeof COMMENTS[0];
-  x: number;
-  y: number;
-}
-
 export default function AuthHeroAnimation() {
   const [activeCity, setActiveCity] = useState(0);
-  const [commentBubbles, setCommentBubbles] = useState<CommentBubble[]>([]);
   const [connectionLines, setConnectionLines] = useState<{ from: number; to: number; id: number }[]>([]);
 
   // Generate floating sport icons
@@ -86,23 +65,6 @@ export default function AuthHeroAnimation() {
     const interval = setInterval(() => {
       setActiveCity(prev => (prev + 1) % CITIES.length);
     }, 1500);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Pop comment bubbles periodically
-  useEffect(() => {
-    let commentId = 0;
-    const interval = setInterval(() => {
-      const comment = COMMENTS[commentId % COMMENTS.length];
-      const city = CITIES[Math.floor(Math.random() * CITIES.length)];
-      const newBubble: CommentBubble = {
-        id: commentId++,
-        comment,
-        x: Math.min(Math.max(city.x - 40, 20), 320),
-        y: Math.max(city.y - 50, 20),
-      };
-      setCommentBubbles(prev => [...prev.slice(-2), newBubble]);
-    }, 2800);
     return () => clearInterval(interval);
   }, []);
 
@@ -200,7 +162,7 @@ export default function AuthHeroAnimation() {
             <Diversity3 sx={{ color: 'white', fontSize: 28 }} />
           </Box>
           <Typography variant="h4" fontWeight={800} color="white" sx={{ textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
-            TeamUp
+            EkipAY
           </Typography>
         </Box>
         <Typography variant="body1" sx={{ color: alpha('#fff', 0.8), fontWeight: 500 }}>
@@ -356,51 +318,6 @@ export default function AuthHeroAnimation() {
             </Box>
           );
         })}
-      </Box>
-
-      {/* Comment Bubbles */}
-      <Box sx={{ position: 'relative', width: { xs: '100%', sm: 480 }, maxWidth: 480, height: 60, mx: 'auto', zIndex: 10, mt: 1, overflow: 'hidden' }}>
-        <AnimatePresence mode="popLayout">
-          {commentBubbles.slice(-3).map((bubble, idx) => (
-            <motion.div
-              key={bubble.id}
-              initial={{ opacity: 0, scale: 0.6, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -10 }}
-              transition={{ duration: 0.5, type: 'spring', stiffness: 300, damping: 25 }}
-              style={{
-                position: 'absolute',
-                left: `${idx * 34 + 1}%`,
-                top: 0,
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  bgcolor: alpha('#fff', 0.1),
-                  backdropFilter: 'blur(12px)',
-                  border: `1px solid ${alpha('#fff', 0.15)}`,
-                  borderRadius: 3,
-                  px: 2,
-                  py: 1,
-                  maxWidth: 220,
-                }}
-              >
-                <ChatBubble sx={{ fontSize: 14, color: alpha('#fff', 0.6) }} />
-                <Box>
-                  <Typography variant="caption" sx={{ color: alpha('#fff', 0.5), fontSize: 10, display: 'block' }}>
-                    {bubble.comment.author}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: 11.5, lineHeight: 1.3 }}>
-                    {bubble.comment.text}
-                  </Typography>
-                </Box>
-              </Box>
-            </motion.div>
-          ))}
-        </AnimatePresence>
       </Box>
 
       {/* Stats ticker */}

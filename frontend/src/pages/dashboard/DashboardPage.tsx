@@ -113,7 +113,7 @@ function PieTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
     <Box sx={{
-      bgcolor: alpha('#fff', 0.95),
+      bgcolor: 'background.paper',
       backdropFilter: 'blur(8px)',
       p: 1.5,
       borderRadius: 2,
@@ -133,7 +133,7 @@ function AreaTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <Box sx={{
-      bgcolor: alpha('#fff', 0.95),
+      bgcolor: 'background.paper',
       backdropFilter: 'blur(8px)',
       p: 1.5,
       borderRadius: 2,

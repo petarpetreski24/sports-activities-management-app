@@ -42,7 +42,7 @@ services:
       - Email__SmtpHost=${EMAIL_SMTP_HOST:-smtp.sendgrid.net}
       - Email__SmtpPort=${EMAIL_SMTP_PORT:-587}
       - Email__FromEmail=${EMAIL_FROM:-petarpetreski24@gmail.com}
-      - Email__FromName=${EMAIL_FROM_NAME:-TeamUp}
+      - Email__FromName=${EMAIL_FROM_NAME:-EkipAY}
       - Email__SmtpUsername=${EMAIL_SMTP_USERNAME:-apikey}
       - Email__SmtpPassword=${SENDGRID_API_KEY}
       - Email__EnableSsl=${EMAIL_ENABLE_SSL:-true}

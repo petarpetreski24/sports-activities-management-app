@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SportActivityOrganizer.Application.Interfaces;
 
 namespace SportActivityOrganizer.Infrastructure.Services;
@@ -8,10 +9,12 @@ namespace SportActivityOrganizer.Infrastructure.Services;
 public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IConfiguration configuration)
+    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task SendEmailAsync(string to, string subject, string htmlBody)
@@ -23,32 +26,49 @@ public class EmailService : IEmailService
         var smtpUsername = _configuration["Email:SmtpUsername"];
         var smtpPassword = _configuration["Email:SmtpPassword"];
 
-        using var client = new SmtpClient(smtpHost, smtpPort);
-
-        if (!string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
+        if (string.IsNullOrEmpty(smtpPassword))
         {
-            client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+            _logger.LogWarning("SMTP password not configured — skipping email to {To}: {Subject}", to, subject);
+            return;
         }
 
-        var enableSsl = bool.Parse(_configuration["Email:EnableSsl"] ?? "true");
-        client.EnableSsl = enableSsl;
-
-        var mailMessage = new MailMessage
+        try
         {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = subject,
-            Body = htmlBody,
-            IsBodyHtml = true
-        };
+            using var client = new SmtpClient(smtpHost, smtpPort);
 
-        mailMessage.To.Add(to);
+            if (!string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
+            {
+                client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+            }
 
-        await client.SendMailAsync(mailMessage);
+            var enableSsl = bool.Parse(_configuration["Email:EnableSsl"] ?? "true");
+            client.EnableSsl = enableSsl;
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(fromEmail, fromName),
+                Subject = subject,
+                Body = htmlBody,
+                IsBodyHtml = true
+            };
+
+            mailMessage.To.Add(to);
+
+            await client.SendMailAsync(mailMessage);
+            _logger.LogInformation("Email sent to {To}: {Subject}", to, subject);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email to {To}: {Subject}", to, subject);
+            // Don't throw — email failure should not block registration/other operations
+        }
     }
 
     public async Task SendEmailConfirmationAsync(string to, string token)
     {
-        var baseUrl = _configuration["App:BaseUrl"] ?? "http://localhost:5000";
+        var baseUrl = Environment.GetEnvironmentVariable("App__BaseUrl")
+                      ?? _configuration["App:BaseUrl"]
+                      ?? "http://localhost:5000";
         var confirmationLink = $"{baseUrl}/api/auth/confirm-email?token={token}";
 
         var subject = "Потврдете ја вашата е-пошта - EkipAY";
@@ -77,7 +97,9 @@ public class EmailService : IEmailService
 
     public async Task SendPasswordResetAsync(string to, string token)
     {
-        var baseUrl = _configuration["App:FrontendUrl"] ?? _configuration["App:BaseUrl"] ?? "http://localhost:5173";
+        var baseUrl = Environment.GetEnvironmentVariable("App__FrontendUrl")
+                      ?? _configuration["App:FrontendUrl"]
+                      ?? "http://localhost:5173";
         var resetLink = $"{baseUrl}/reset-password?token={token}";
 
         var subject = "Ресетирање на лозинка - EkipAY";

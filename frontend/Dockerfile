@@ -17,12 +17,15 @@ RUN npm run build
 
 # Production
 FROM nginx:alpine AS production
+
+# Remove default nginx config
+RUN rm -f /etc/nginx/conf.d/default.conf
+
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx.conf.template /tmp/nginx.conf.template
 
 # Railway provides PORT env var; Docker Compose defaults to 3000
 ENV PORT=3000
-EXPOSE 3000
 
 # Only substitute $PORT (not $uri etc.) then start nginx
-CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /tmp/nginx.conf.template > /etc/nginx/conf.d/default.conf && cat /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

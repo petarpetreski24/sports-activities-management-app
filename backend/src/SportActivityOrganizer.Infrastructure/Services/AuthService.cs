@@ -60,8 +60,12 @@ public class AuthService : IAuthService
         };
         await _unitOfWork.NotificationPreferences.AddAsync(notificationPreference);
 
-        // Send confirmation email
-        await _emailService.SendEmailConfirmationAsync(user.Email, emailConfirmationToken);
+        // Send confirmation email (fire-and-forget — don't block registration)
+        _ = Task.Run(async () =>
+        {
+            try { await _emailService.SendEmailConfirmationAsync(user.Email, emailConfirmationToken); }
+            catch { /* logged inside EmailService */ }
+        });
 
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();

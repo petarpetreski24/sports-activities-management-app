@@ -35,6 +35,7 @@ public class EmailService : IEmailService
         try
         {
             using var client = new SmtpClient(smtpHost, smtpPort);
+            client.Timeout = 10000; // 10 second timeout
 
             if (!string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
             {

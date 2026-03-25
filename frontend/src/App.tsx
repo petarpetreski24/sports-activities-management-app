@@ -42,17 +42,23 @@ function HomeRedirect() {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
 
+function GuestOnly({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+}
+
 export default function App() {
   return (
     <Routes>
       {/* Landing page for unauthenticated, dashboard for authenticated */}
       <Route path="/" element={<HomeRedirect />} />
 
-      {/* Public auth routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      {/* Public auth routes — redirect to dashboard if already logged in */}
+      <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+      <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
+      <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
+      <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
       <Route path="/confirm-email" element={<ConfirmEmailPage />} />
 
       {/* Protected routes inside Layout */}

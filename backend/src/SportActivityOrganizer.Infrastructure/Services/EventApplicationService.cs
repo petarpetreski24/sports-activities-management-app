@@ -59,8 +59,8 @@ public class EventApplicationService : IEventApplicationService
                 await _notificationService.CreateNotificationAsync(
                     sportEvent.OrganizerId,
                     NotificationType.ApplicationReceived,
-                    "New Application",
-                    $"A new application has been received for your event \"{sportEvent.Title}\".",
+                    "Нова апликација",
+                    $"Добивте нова апликација за настанот \"{sportEvent.Title}\".",
                     eventId);
 
                 return await MapToDto(existingApplication);
@@ -88,8 +88,8 @@ public class EventApplicationService : IEventApplicationService
         await _notificationService.CreateNotificationAsync(
             sportEvent.OrganizerId,
             NotificationType.ApplicationReceived,
-            "New Application",
-            $"A new application has been received for your event \"{sportEvent.Title}\".",
+            "Нова апликација",
+            $"Добивте нова апликација за настанот \"{sportEvent.Title}\".",
             eventId);
 
         return await MapToDto(application);
@@ -132,8 +132,8 @@ public class EventApplicationService : IEventApplicationService
         await _notificationService.CreateNotificationAsync(
             application.UserId,
             NotificationType.ApplicationApproved,
-            "Application Approved",
-            $"Your application for \"{application.Event.Title}\" has been approved!",
+            "Апликација одобрена",
+            $"Вашата апликација за \"{application.Event.Title}\" е одобрена!",
             application.EventId);
 
         return await MapToDto(application);
@@ -164,8 +164,8 @@ public class EventApplicationService : IEventApplicationService
         await _notificationService.CreateNotificationAsync(
             application.UserId,
             NotificationType.ApplicationRejected,
-            "Application Rejected",
-            $"Your application for \"{application.Event.Title}\" has been rejected.",
+            "Апликација одбиена",
+            $"Вашата апликација за \"{application.Event.Title}\" е одбиена.",
             application.EventId);
 
         return await MapToDto(application);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Box, Paper, Typography, TextField, Button, Alert, Link, alpha, Divider, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Paper, Typography, TextField, Button, Alert, Link, alpha, Divider, useMediaQuery, useTheme, CircularProgress } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Diversity3, KeyboardArrowDown } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
@@ -172,7 +172,7 @@ export default function LoginPage() {
                     fontWeight: 600, fontSize: '1rem',
                   }}
                 >
-                  {isSubmitting ? 'Се најавува...' : 'Најави се'}
+                  {isSubmitting ? <><CircularProgress size={20} sx={{ color: 'white', mr: 1 }} /> Се најавува...</> : 'Најави се'}
                 </Button>
               </form>
 
@@ -359,7 +359,7 @@ export default function LoginPage() {
                     fontWeight: 600, fontSize: '1rem',
                   }}
                 >
-                  {isSubmitting ? 'Се најавува...' : 'Најави се'}
+                  {isSubmitting ? <><CircularProgress size={20} sx={{ color: 'white', mr: 1 }} /> Се најавува...</> : 'Најави се'}
                 </Button>
               </motion.div>
             </form>

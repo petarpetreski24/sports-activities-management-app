@@ -134,6 +134,36 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
     await DataSeeder.SeedAsync(db);
+
+    // One-time cleanup: remove petarpetreski24 aliases and promote user1 to admin
+    var petarUsers = await db.Users
+        .Where(u => u.Email.Contains("petarpetreski"))
+        .ToListAsync();
+    if (petarUsers.Any())
+    {
+        // Remove related data first
+        var petarIds = petarUsers.Select(u => u.Id).ToList();
+        db.Notifications.RemoveRange(db.Notifications.Where(n => petarIds.Contains(n.UserId)));
+        db.NotificationPreferences.RemoveRange(db.NotificationPreferences.Where(np => petarIds.Contains(np.UserId)));
+        db.EventApplications.RemoveRange(db.EventApplications.Where(ea => petarIds.Contains(ea.UserId)));
+        db.EventComments.RemoveRange(db.EventComments.Where(ec => petarIds.Contains(ec.UserId)));
+        db.EventRatings.RemoveRange(db.EventRatings.Where(er => petarIds.Contains(er.ReviewerId)));
+        db.ParticipantRatings.RemoveRange(db.ParticipantRatings.Where(pr => petarIds.Contains(pr.RaterId) || petarIds.Contains(pr.ParticipantId)));
+        db.Set<SportActivityOrganizer.Domain.Entities.UserFavoriteSport>()
+            .RemoveRange(db.Set<SportActivityOrganizer.Domain.Entities.UserFavoriteSport>().Where(fs => petarIds.Contains(fs.UserId)));
+        db.Users.RemoveRange(petarUsers);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"Cleaned up {petarUsers.Count} petarpetreski user(s).");
+    }
+
+    // Promote user1 to Admin if not already
+    var user1 = await db.Users.FirstOrDefaultAsync(u => u.Email == "user1@sportactivityorganizer.com");
+    if (user1 != null && user1.Role != SportActivityOrganizer.Domain.Enums.UserRole.Admin)
+    {
+        user1.Role = SportActivityOrganizer.Domain.Enums.UserRole.Admin;
+        await db.SaveChangesAsync();
+        Console.WriteLine("Promoted user1 to Admin.");
+    }
 }
 
 // Middleware

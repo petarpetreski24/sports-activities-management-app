@@ -3,7 +3,7 @@ import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-d
 import { useForm } from 'react-hook-form';
 import { Box, Paper, Typography, TextField, Button, Alert, Link, alpha, Divider, useMediaQuery, useTheme, CircularProgress } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Diversity3, KeyboardArrowDown } from '@mui/icons-material';
+import { Diversity3, KeyboardArrowDown, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthHeroAnimation from '../../components/AuthHeroAnimation';
 
@@ -47,6 +47,30 @@ export default function LoginPage() {
   if (isMobile) {
     return (
       <Box sx={{ minHeight: '100vh', overflowY: 'auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+        {/* Top-left "Дознај повеќе" button */}
+        <Box sx={{ position: 'fixed', top: 20, left: 20, zIndex: 50 }}>
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+            <Button
+              component={RouterLink} to="/"
+              startIcon={<ArrowBack sx={{ fontSize: 18 }} />}
+              sx={{
+                color: alpha('#fff', 0.7),
+                border: `1px solid ${alpha('#fff', 0.15)}`,
+                borderRadius: 3,
+                px: 2, py: 0.75,
+                backdropFilter: 'blur(12px)',
+                bgcolor: alpha('#fff', 0.05),
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                textTransform: 'none',
+                letterSpacing: 0.5,
+                '&:hover': { bgcolor: alpha('#fff', 0.1), borderColor: alpha('#fff', 0.3), color: 'white' },
+              }}
+            >
+              Дознај повеќе
+            </Button>
+          </motion.div>
+        </Box>
         {/* Hero section - full viewport height */}
         <Box
           sx={{
@@ -179,12 +203,14 @@ export default function LoginPage() {
               <Divider sx={{ my: 2 }} />
 
               <Box textAlign="center">
-                <Link component={RouterLink} to="/forgot-password" variant="body2">
+                <Link component={RouterLink} to="/forgot-password" variant="body2" underline="none"
+                  sx={{ color: 'text.secondary', fontWeight: 500, '&:hover': { color: 'text.primary' } }}>
                   Заборавена лозинка?
                 </Link>
-                <Typography variant="body2" mt={1.5}>
+                <Typography variant="body2" mt={1.5} color="text.secondary">
                   Немате сметка?{' '}
-                  <Link component={RouterLink} to="/register" fontWeight={600}>
+                  <Link component={RouterLink} to="/register" underline="none" fontWeight={700}
+                    sx={{ background: 'linear-gradient(135deg, #059669, #1a56db)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', '&:hover': { filter: 'brightness(1.2)' } }}>
                     Регистрирајте се
                   </Link>
                 </Typography>
@@ -201,8 +227,32 @@ export default function LoginPage() {
     <Box
       display="flex"
       minHeight="100vh"
-      sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}
+      sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', position: 'relative' }}
     >
+      {/* Top-left "Дознај повеќе" button */}
+      <Box sx={{ position: 'absolute', top: 24, left: 24, zIndex: 50 }}>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+          <Button
+            component={RouterLink} to="/"
+            startIcon={<ArrowBack sx={{ fontSize: 18 }} />}
+            sx={{
+              color: alpha('#fff', 0.7),
+              border: `1px solid ${alpha('#fff', 0.15)}`,
+              borderRadius: 3,
+              px: 2.5, py: 0.75,
+              backdropFilter: 'blur(12px)',
+              bgcolor: alpha('#fff', 0.05),
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              textTransform: 'none',
+              letterSpacing: 0.5,
+              '&:hover': { bgcolor: alpha('#fff', 0.1), borderColor: alpha('#fff', 0.3), color: 'white' },
+            }}
+          >
+            Дознај повеќе
+          </Button>
+        </motion.div>
+      </Box>
       {/* Left: Animated Hero */}
       <Box
         sx={{
@@ -368,16 +418,16 @@ export default function LoginPage() {
 
             <Box textAlign="center">
               <Link
-                component={RouterLink} to="/forgot-password" variant="body2"
-                sx={{ color: alpha('#fff', 0.6), '&:hover': { color: 'white' } }}
+                component={RouterLink} to="/forgot-password" variant="body2" underline="none"
+                sx={{ color: alpha('#fff', 0.5), fontWeight: 500, '&:hover': { color: alpha('#fff', 0.8) } }}
               >
                 Заборавена лозинка?
               </Link>
-              <Typography variant="body2" mt={1.5} sx={{ color: alpha('#fff', 0.5) }}>
+              <Typography variant="body2" mt={1.5} sx={{ color: alpha('#fff', 0.45) }}>
                 Немате сметка?{' '}
                 <Link
-                  component={RouterLink} to="/register" fontWeight={600}
-                  sx={{ color: '#1a56db', '&:hover': { color: '#3b82f6' } }}
+                  component={RouterLink} to="/register" underline="none" fontWeight={700}
+                  sx={{ background: 'linear-gradient(135deg, #059669, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', '&:hover': { filter: 'brightness(1.3)' } }}
                 >
                   Регистрирајте се
                 </Link>

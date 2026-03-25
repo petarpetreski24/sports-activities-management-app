@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Box, Paper, Typography, TextField, Button, Alert, Link, Divider, alpha, useMediaQuery, useTheme } from '@mui/material';
+import ArrowBack from '@mui/icons-material/ArrowBack';
 import { motion } from 'framer-motion';
 import Diversity3 from '@mui/icons-material/Diversity3';
 import { useAuth } from '../../contexts/AuthContext';
@@ -45,8 +46,32 @@ export default function RegisterPage() {
     <Box
       display="flex"
       minHeight="100vh"
-      sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}
+      sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', position: 'relative' }}
     >
+      {/* Top-left "Дознај повеќе" button */}
+      <Box sx={{ position: 'absolute', top: 24, left: 24, zIndex: 50 }}>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+          <Button
+            component={RouterLink} to="/"
+            startIcon={<ArrowBack sx={{ fontSize: 18 }} />}
+            sx={{
+              color: alpha('#fff', 0.7),
+              border: `1px solid ${alpha('#fff', 0.15)}`,
+              borderRadius: 3,
+              px: 2.5, py: 0.75,
+              backdropFilter: 'blur(12px)',
+              bgcolor: alpha('#fff', 0.05),
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              textTransform: 'none',
+              letterSpacing: 0.5,
+              '&:hover': { bgcolor: alpha('#fff', 0.1), borderColor: alpha('#fff', 0.3), color: 'white' },
+            }}
+          >
+            Дознај повеќе
+          </Button>
+        </motion.div>
+      </Box>
       {/* Left: Animated Hero */}
       {!isMobile && (
         <Box
@@ -207,14 +232,15 @@ export default function RegisterPage() {
             <Typography
               variant="body2"
               textAlign="center"
-              sx={{ color: isMobile ? 'text.primary' : alpha('#fff', 0.5) }}
+              sx={{ color: isMobile ? 'text.secondary' : alpha('#fff', 0.45) }}
             >
               Веќе имате сметка?{' '}
               <Link
                 component={RouterLink}
                 to="/login"
-                fontWeight={600}
-                sx={{ color: isMobile ? undefined : '#1a56db', '&:hover': { color: isMobile ? undefined : '#3b82f6' } }}
+                underline="none"
+                fontWeight={700}
+                sx={{ background: 'linear-gradient(135deg, #059669, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', '&:hover': { filter: 'brightness(1.3)' } }}
               >
                 Најавете се
               </Link>

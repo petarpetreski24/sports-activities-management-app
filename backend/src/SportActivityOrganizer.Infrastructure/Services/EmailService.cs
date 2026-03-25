@@ -1,5 +1,6 @@
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SportActivityOrganizer.Application.Interfaces;
@@ -10,6 +11,7 @@ public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
+    private static readonly HttpClient _httpClient = new();
 
     public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
@@ -19,44 +21,45 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
-        var smtpHost = _configuration["Email:SmtpHost"] ?? "smtp.sendgrid.net";
-        var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
         var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@sportactivityorganizer.com";
         var fromName = _configuration["Email:FromName"] ?? "EkipAY";
-        var smtpUsername = _configuration["Email:SmtpUsername"];
-        var smtpPassword = _configuration["Email:SmtpPassword"];
+        var apiKey = _configuration["Email:SmtpPassword"]; // SendGrid API key
 
-        if (string.IsNullOrEmpty(smtpPassword))
+        if (string.IsNullOrEmpty(apiKey))
         {
-            _logger.LogWarning("SMTP password not configured — skipping email to {To}: {Subject}", to, subject);
+            _logger.LogWarning("SendGrid API key not configured — skipping email to {To}: {Subject}", to, subject);
             return;
         }
 
         try
         {
-            using var client = new SmtpClient(smtpHost, smtpPort);
-            client.Timeout = 10000; // 10 second timeout
-
-            if (!string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
+            var payload = new
             {
-                client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
-            }
-
-            var enableSsl = bool.Parse(_configuration["Email:EnableSsl"] ?? "true");
-            client.EnableSsl = enableSsl;
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(fromEmail, fromName),
-                Subject = subject,
-                Body = htmlBody,
-                IsBodyHtml = true
+                personalizations = new[] { new { to = new[] { new { email = to } } } },
+                from = new { email = fromEmail, name = fromName },
+                subject,
+                content = new[] { new { type = "text/html", value = htmlBody } }
             };
 
-            mailMessage.To.Add(to);
+            var json = JsonSerializer.Serialize(payload);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.sendgrid.com/v3/mail/send")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
-            await client.SendMailAsync(mailMessage);
-            _logger.LogInformation("Email sent to {To}: {Subject}", to, subject);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var response = await _httpClient.SendAsync(request, cts.Token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Email sent to {To}: {Subject}", to, subject);
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("SendGrid returned {Status}: {Body} for email to {To}", response.StatusCode, body, to);
+            }
         }
         catch (Exception ex)
         {

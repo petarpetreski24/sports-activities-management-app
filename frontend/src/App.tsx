@@ -30,9 +30,8 @@ import PublicProfilePage from './pages/profile/PublicProfilePage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import NotificationPreferencesPage from './pages/notifications/NotificationPreferencesPage';
 
-// Community pages
-import LeaderboardPage from './pages/LeaderboardPage';
-import HeatmapPage from './pages/HeatmapPage';
+// Community
+import CommunityPage from './pages/CommunityPage';
 
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -82,8 +81,7 @@ export default function App() {
         <Route path="/users/:id" element={<PublicProfilePage />} />
 
         {/* Community */}
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="/heatmap" element={<HeatmapPage />} />
+        <Route path="/community" element={<CommunityPage />} />
 
         {/* Notifications */}
         <Route path="/notifications" element={<NotificationsPage />} />

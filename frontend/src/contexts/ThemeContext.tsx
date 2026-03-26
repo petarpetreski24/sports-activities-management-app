@@ -16,7 +16,7 @@ export const useThemeMode = () => useContext(ThemeContext);
 export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('themeMode');
-    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+    return (saved === 'dark' || saved === 'light') ? saved : 'dark';
   });
 
   useEffect(() => {

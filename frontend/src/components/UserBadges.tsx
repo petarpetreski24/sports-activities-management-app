@@ -1,16 +1,51 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Tooltip, alpha, useTheme, Skeleton } from '@mui/material';
+import { Box, Typography, Tooltip, Skeleton } from '@mui/material';
+import {
+  EmojiEvents, Sports, MilitaryTech, Star, WorkspacePremium,
+  Event, EventAvailable, Celebration, ThumbUp, Verified,
+  RateReview, Chat, SportsScore, AutoAwesome, Explore,
+  Nightlight,
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import * as statsApi from '../api/stats';
 import { Badge } from '../types';
 
-const LEVEL_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  bronze: { bg: '#CD7F3220', border: '#CD7F3240', text: '#CD7F32' },
-  silver: { bg: '#C0C0C020', border: '#C0C0C040', text: '#94a3b8' },
-  gold: { bg: '#FFD70020', border: '#FFD70040', text: '#f59e0b' },
-  platinum: { bg: '#1a56db20', border: '#1a56db40', text: '#1a56db' },
-  diamond: { bg: '#8b5cf620', border: '#8b5cf640', text: '#8b5cf6' },
+const ICON_MAP: Record<string, React.ReactNode> = {
+  emoji_events: <EmojiEvents />,
+  sports: <Sports />,
+  military_tech: <MilitaryTech />,
+  star: <Star />,
+  workspace_premium: <WorkspacePremium />,
+  event: <Event />,
+  event_available: <EventAvailable />,
+  celebration: <Celebration />,
+  thumb_up: <ThumbUp />,
+  verified: <Verified />,
+  rate_review: <RateReview />,
+  chat: <Chat />,
+  sports_score: <SportsScore />,
+  auto_awesome: <AutoAwesome />,
+  explore: <Explore />,
+  nightlight: <Nightlight />,
 };
+
+const LEVEL_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+  bronze: { bg: 'rgba(205,127,50,0.12)', border: 'rgba(205,127,50,0.3)', text: '#CD7F32', glow: 'rgba(205,127,50,0.3)' },
+  silver: { bg: 'rgba(192,192,192,0.12)', border: 'rgba(192,192,192,0.3)', text: '#94a3b8', glow: 'rgba(192,192,192,0.3)' },
+  gold: { bg: 'rgba(255,215,0,0.12)', border: 'rgba(255,215,0,0.3)', text: '#f59e0b', glow: 'rgba(255,215,0,0.4)' },
+  platinum: { bg: 'rgba(26,86,219,0.12)', border: 'rgba(26,86,219,0.3)', text: '#3b82f6', glow: 'rgba(26,86,219,0.4)' },
+  diamond: { bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.3)', text: '#8b5cf6', glow: 'rgba(139,92,246,0.5)' },
+};
+
+// Random-ish placement offsets for a scattered look
+const SCATTER_OFFSETS = [
+  { rotate: -8, y: 4 }, { rotate: 5, y: -2 }, { rotate: -3, y: 6 },
+  { rotate: 7, y: -4 }, { rotate: -5, y: 2 }, { rotate: 4, y: -6 },
+  { rotate: -6, y: 3 }, { rotate: 8, y: -3 }, { rotate: -2, y: 5 },
+  { rotate: 6, y: -1 }, { rotate: -4, y: 4 }, { rotate: 3, y: -5 },
+  { rotate: -7, y: 1 }, { rotate: 5, y: -2 }, { rotate: -3, y: 6 },
+  { rotate: 7, y: -4 }, { rotate: -5, y: 2 }, { rotate: 4, y: -6 },
+];
 
 interface Props {
   userId: number;
@@ -18,7 +53,6 @@ interface Props {
 }
 
 export default function UserBadges({ userId, compact = false }: Props) {
-  const theme = useTheme();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,52 +65,113 @@ export default function UserBadges({ userId, compact = false }: Props) {
 
   if (loading) {
     return (
-      <Box display="flex" gap={1} flexWrap="wrap">
-        {[1, 2, 3].map(i => <Skeleton key={i} variant="rounded" width={compact ? 36 : 80} height={compact ? 36 : 72} />)}
+      <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center">
+        {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="rounded" width={80} height={80} sx={{ borderRadius: 3 }} />)}
       </Box>
     );
   }
 
-  if (badges.length === 0) return null;
+  if (badges.length === 0) {
+    return (
+      <Typography color="text.secondary" textAlign="center" py={2} fontSize={14}>
+        Сеуште нема беџови — учествувај на настани за да отклучиш!
+      </Typography>
+    );
+  }
 
   return (
-    <Box display="flex" gap={compact ? 0.5 : 1} flexWrap="wrap">
+    <Box
+      display="flex"
+      gap={compact ? 1 : 2}
+      flexWrap="wrap"
+      justifyContent="center"
+      sx={{ py: compact ? 0 : 1 }}
+    >
       {badges.map((badge, i) => {
         const colors = LEVEL_COLORS[badge.level] || LEVEL_COLORS.bronze;
+        const scatter = SCATTER_OFFSETS[i % SCATTER_OFFSETS.length];
+        const icon = ICON_MAP[badge.icon] || <EmojiEvents />;
+
         return (
-          <Tooltip key={badge.id} title={`${badge.name} — ${badge.description}`} arrow>
+          <Tooltip
+            key={badge.id}
+            title={
+              <Box textAlign="center">
+                <Typography fontWeight={700} fontSize={13}>{badge.name}</Typography>
+                <Typography fontSize={11} sx={{ opacity: 0.85 }}>{badge.description}</Typography>
+              </Box>
+            }
+            arrow
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05, type: 'spring', stiffness: 200 }}
+              initial={{ opacity: 0, scale: 0, rotate: scatter.rotate * 2 }}
+              animate={{ opacity: 1, scale: 1, rotate: scatter.rotate }}
+              transition={{
+                delay: 0.1 + i * 0.08,
+                type: 'spring',
+                stiffness: 260,
+                damping: 15,
+              }}
+              whileHover={{
+                scale: 1.2,
+                rotate: 0,
+                y: -8,
+                transition: { type: 'spring', stiffness: 400 },
+              }}
+              style={{ cursor: 'default' }}
             >
-              {compact ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: compact ? 52 : 80,
+                  height: compact ? 52 : 80,
+                  borderRadius: 3,
+                  bgcolor: colors.bg,
+                  border: `1.5px solid ${colors.border}`,
+                  boxShadow: `0 4px 20px ${colors.glow}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    bgcolor: colors.glow,
+                    filter: 'blur(12px)',
+                  },
+                }}
+              >
                 <Box sx={{
-                  width: 32, height: 32, borderRadius: 1.5, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  bgcolor: colors.bg, border: `1px solid ${colors.border}`,
-                  fontSize: 16, cursor: 'default',
+                  color: colors.text,
+                  fontSize: compact ? 22 : 30,
+                  display: 'flex',
+                  '& .MuiSvgIcon-root': { fontSize: 'inherit' },
                 }}>
-                  <span className="material-icons" style={{ fontSize: 18, color: colors.text }}>
-                    {badge.icon}
-                  </span>
+                  {icon}
                 </Box>
-              ) : (
-                <Box sx={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  p: 1, borderRadius: 2, minWidth: 72,
-                  bgcolor: colors.bg, border: `1px solid ${colors.border}`,
-                  cursor: 'default', transition: 'transform 0.2s',
-                  '&:hover': { transform: 'translateY(-2px)' },
-                }}>
-                  <span className="material-icons" style={{ fontSize: 24, color: colors.text }}>
-                    {badge.icon}
-                  </span>
-                  <Typography variant="caption" fontWeight={700} sx={{ color: colors.text, fontSize: 10, mt: 0.5, textAlign: 'center' }}>
+                {!compact && (
+                  <Typography
+                    variant="caption"
+                    fontWeight={700}
+                    sx={{
+                      color: colors.text,
+                      fontSize: 9,
+                      mt: 0.3,
+                      textAlign: 'center',
+                      lineHeight: 1.1,
+                      px: 0.5,
+                    }}
+                  >
                     {badge.name}
                   </Typography>
-                </Box>
-              )}
+                )}
+              </Box>
             </motion.div>
           </Tooltip>
         );

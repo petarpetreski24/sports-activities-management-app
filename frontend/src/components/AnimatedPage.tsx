@@ -30,20 +30,20 @@ export const staggerContainer = {
 
 export const fadeInUp = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
 
 export const scaleIn = {
   initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: 'easeOut' as const } },
 };
 
 export const slideInLeft = {
   initial: { opacity: 0, x: -30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
 
 export const slideInRight = {
   initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };

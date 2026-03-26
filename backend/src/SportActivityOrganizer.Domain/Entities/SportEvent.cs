@@ -18,6 +18,8 @@ public class SportEvent : BaseAuditableEntity
     public SkillLevel? MinSkillLevel { get; set; }
     public EventStatus Status { get; set; } = EventStatus.Open;
     public decimal? AvgRating { get; set; }
+    public bool IsLastMinute { get; set; }
+    public DateTime? LastMinuteAt { get; set; }
 
     // Navigation properties
     public User Organizer { get; set; } = null!;

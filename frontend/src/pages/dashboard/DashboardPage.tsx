@@ -11,7 +11,7 @@ import {
   PendingActions, Close, CalendarMonth, AutoAwesome,
   Notifications, EmojiEvents, Groups, EventBusy, WavingHand,
   TrendingUp, PieChart as PieChartIcon, ArrowForward,
-  AccessTime,
+  AccessTime, Bolt,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,6 +21,7 @@ import {
 import { DashboardData, SportEvent, PendingApplication } from '../../types';
 import * as dashboardApi from '../../api/dashboard';
 import * as applicationsApi from '../../api/applications';
+import * as eventsApi from '../../api/events';
 import AnimatedPage from '../../components/AnimatedPage';
 import AnimatedCard from '../../components/AnimatedCard';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
@@ -155,6 +156,7 @@ export default function DashboardPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.down('md'));
   const [data, setData] = useState<DashboardData | null>(null);
+  const [lastMinuteEvents, setLastMinuteEvents] = useState<SportEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pendingOpen, setPendingOpen] = useState(false);
@@ -164,6 +166,9 @@ export default function DashboardPage() {
       .then(({ data }) => setData(data))
       .catch(() => setError('Грешка при вчитување.'))
       .finally(() => setLoading(false));
+    eventsApi.getLastMinute()
+      .then(({ data }) => setLastMinuteEvents(data))
+      .catch(() => {});
   };
 
   useEffect(() => { loadDashboard(); }, []);
@@ -535,6 +540,49 @@ export default function DashboardPage() {
           </motion.div>
         </Grid>
       </Grid>
+
+      {/* Last Minute Events */}
+      {lastMinuteEvents.length > 0 && (
+        <Box mb={3}>
+          <SectionHeader
+            icon={<Bolt />}
+            title="Итен повик"
+            count={lastMinuteEvents.length}
+            action={
+              <GradientButton
+                size="small"
+                onClick={() => navigate('/events')}
+                sx={{ px: 2 }}
+                gradientFrom="#dc2626"
+                gradientTo="#f59e0b"
+                hoverFrom="#b91c1c"
+                hoverTo="#d97706"
+              >
+                Сите <ArrowForward sx={{ ml: 0.5, fontSize: 16 }} />
+              </GradientButton>
+            }
+          />
+          <Grid container spacing={2}>
+            {lastMinuteEvents.slice(0, isMd ? 4 : 6).map((event, i) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
+                <Box sx={{ position: 'relative' }}>
+                  <Box sx={{
+                    position: 'absolute', top: 8, right: 8, zIndex: 1,
+                    px: 1, py: 0.25, borderRadius: 1,
+                    bgcolor: alpha('#dc2626', 0.9), color: '#fff',
+                    fontSize: 10, fontWeight: 800, letterSpacing: '0.05em',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.7 } },
+                  }}>
+                    ИТНО
+                  </Box>
+                  <EventCard event={event} onClick={() => navigate(`/events/${event.id}`)} index={i} />
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
 
       {/* Upcoming Events */}
       {data.upcomingEvents.length > 0 && (

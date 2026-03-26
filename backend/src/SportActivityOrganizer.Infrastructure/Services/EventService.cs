@@ -376,6 +376,49 @@ public class EventService : IEventService
         return _mapper.Map<List<SportEventDto>>(events);
     }
 
+    public async Task<SportEventDto> ToggleLastMinuteAsync(int organizerId, int eventId)
+    {
+        var sportEvent = await _unitOfWork.SportEvents.Query()
+            .Include(e => e.Organizer)
+            .Include(e => e.Sport)
+            .Include(e => e.Applications)
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (sportEvent == null)
+            throw new KeyNotFoundException("Event not found.");
+
+        if (sportEvent.OrganizerId != organizerId)
+            throw new UnauthorizedAccessException("Only the organizer can toggle last minute status.");
+
+        if (sportEvent.Status != EventStatus.Open)
+            throw new InvalidOperationException("Only open events can be marked as last minute.");
+
+        if (sportEvent.EventDate <= DateTime.UtcNow)
+            throw new InvalidOperationException("Cannot mark past events as last minute.");
+
+        sportEvent.IsLastMinute = !sportEvent.IsLastMinute;
+        sportEvent.LastMinuteAt = sportEvent.IsLastMinute ? DateTime.UtcNow : null;
+        sportEvent.UpdatedAt = DateTime.UtcNow;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<SportEventDto>(sportEvent);
+    }
+
+    public async Task<List<SportEventDto>> GetLastMinuteEventsAsync()
+    {
+        var events = await _unitOfWork.SportEvents.Query()
+            .Include(e => e.Organizer)
+            .Include(e => e.Sport)
+            .Include(e => e.Applications)
+            .Where(e => e.IsLastMinute && e.Status == EventStatus.Open && e.EventDate > DateTime.UtcNow)
+            .OrderBy(e => e.EventDate)
+            .Take(20)
+            .ToListAsync();
+
+        return _mapper.Map<List<SportEventDto>>(events);
+    }
+
     private static double CalculateHaversineDistance(double lat1, double lng1, double lat2, double lng2)
     {
         const double R = 6371; // Earth's radius in km

@@ -70,6 +70,76 @@ export interface SportEvent {
   status: string;
   avgRating?: number;
   createdAt: string;
+  isLastMinute?: boolean;
+  lastMinuteAt?: string;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  level: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+}
+
+export interface UserBadges {
+  userId: number;
+  totalBadges: number;
+  badges: Badge[];
+  stats: {
+    eventsParticipated: number;
+    eventsOrganized: number;
+    ratingsGiven: number;
+    commentsWritten: number;
+    distinctSports: number;
+    distinctCities: number;
+  };
+}
+
+export interface LeaderboardData {
+  mostActivePlayers: LeaderboardEntry[];
+  topOrganizers: LeaderboardEntry[];
+  topParticipants: LeaderboardEntry[];
+  weeklyInsights: {
+    newEvents: number;
+    prevWeekEvents: number;
+    eventsTrend: number;
+    newUsers: number;
+    totalApplications: number;
+  };
+  trendingSports: { sportName: string; sportIcon: string; count: number }[];
+}
+
+export interface LeaderboardEntry {
+  userId: number;
+  name: string;
+  photoUrl?: string;
+  rating?: number;
+  eventCount: number;
+}
+
+export interface HeatmapData {
+  events: HeatmapEvent[];
+  cityStats: { lat: number; lng: number; count: number; activeCount: number; topSport: string }[];
+  sportDistribution: { sportName: string; sportIcon: string; count: number }[];
+  totalEvents: number;
+  activeEvents: number;
+}
+
+export interface HeatmapEvent {
+  id: number;
+  title: string;
+  sportId: number;
+  sportName: string;
+  sportIcon: string;
+  lat: number;
+  lng: number;
+  locationAddress: string;
+  eventDate: string;
+  status: string;
+  maxParticipants: number;
+  currentParticipants: number;
+  isLastMinute: boolean;
 }
 
 export interface EventApplication {

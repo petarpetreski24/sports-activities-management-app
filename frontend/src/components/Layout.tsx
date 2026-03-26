@@ -8,7 +8,7 @@ import {
 import {
   Menu as MenuIcon, Notifications as NotifIcon, Diversity3,
   Dashboard, Event, Add, Person, ExitToApp, AdminPanelSettings, EventNote,
-  Close, DarkMode, LightMode,
+  Close, DarkMode, LightMode, Leaderboard, Map as MapIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,6 +50,8 @@ export default function Layout() {
     { label: 'Почетна', path: '/dashboard', icon: <Dashboard /> },
     { label: 'Настани', path: '/events', icon: <Event /> },
     { label: 'Креирај', path: '/events/create', icon: <Add /> },
+    { label: 'Ранг', path: '/leaderboard', icon: <Leaderboard /> },
+    { label: 'Мапа', path: '/heatmap', icon: <MapIcon /> },
   ];
 
   return (

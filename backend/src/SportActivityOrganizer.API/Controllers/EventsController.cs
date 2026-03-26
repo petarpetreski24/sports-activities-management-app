@@ -63,4 +63,19 @@ public class EventsController : ControllerBase
         var result = await _eventService.GetMyEventsAsync(GetUserId(), status, type);
         return Ok(result);
     }
+
+    [HttpPost("{id}/last-minute")]
+    public async Task<ActionResult<SportEventDto>> ToggleLastMinute(int id)
+    {
+        var result = await _eventService.ToggleLastMinuteAsync(GetUserId(), id);
+        return Ok(result);
+    }
+
+    [HttpGet("last-minute")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<SportEventDto>>> GetLastMinuteEvents()
+    {
+        var result = await _eventService.GetLastMinuteEventsAsync();
+        return Ok(result);
+    }
 }

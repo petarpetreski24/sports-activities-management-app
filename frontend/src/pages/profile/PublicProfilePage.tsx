@@ -17,6 +17,7 @@ import { ProfileSkeleton } from '../../components/LoadingSkeleton';
 import GlassCard from '../../components/GlassCard';
 import StatCard from '../../components/StatCard';
 import SectionHeader from '../../components/SectionHeader';
+import UserBadges from '../../components/UserBadges';
 
 const SKILL_COLORS: Record<string, string> = {
   Beginner: '#3b82f6',
@@ -105,6 +106,14 @@ export default function PublicProfilePage() {
                 </Typography>
               )}
             </Box>
+          </GlassCard>
+        </motion.div>
+
+        {/* Badges */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <GlassCard hoverEffect={false} sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" fontWeight={700} mb={1.5}>Беџови</Typography>
+            <UserBadges userId={parseInt(id!)} />
           </GlassCard>
         </motion.div>
 

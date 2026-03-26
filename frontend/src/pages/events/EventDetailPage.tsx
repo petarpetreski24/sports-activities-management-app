@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   CalendarMonth, Timer, Place, Person, CheckCircle, Cancel, Send, Delete,
-  Groups, FitnessCenter, Chat, Star, EditOutlined, CancelOutlined,
+  Groups, FitnessCenter, Chat, Star, EditOutlined, CancelOutlined, Bolt,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SportEvent, EventApplication, EventComment, EventRating, RatableParticipant } from '../../types';
@@ -25,6 +25,7 @@ import SectionHeader from '../../components/SectionHeader';
 import EmptyState from '../../components/EmptyState';
 import GradientButton from '../../components/GradientButton';
 import AnimatedDialog from '../../components/AnimatedDialog';
+import { getWeatherForEvent, WeatherInfo } from '../../utils/weather';
 import dayjs from 'dayjs';
 
 export default function EventDetailPage() {
@@ -47,6 +48,7 @@ export default function EventDetailPage() {
   const [peerRatings, setPeerRatings] = useState<Record<number, { rating: number; comment: string }>>({});
   const [error, setError] = useState('');
   const [applySuccess, setApplySuccess] = useState(false);
+  const [weather, setWeather] = useState<WeatherInfo | null>(null);
 
   const { isAdmin } = useAuth();
   const isOrganizer = user?.id === event?.organizerId;
@@ -78,6 +80,8 @@ export default function EventDetailPage() {
         }
       }
       try { const { data: rats } = await ratingsApi.getEventRatings(parseInt(id)); setRatings(rats); } catch { }
+      // Fetch weather
+      getWeatherForEvent(ev.locationLat, ev.locationLng, ev.eventDate).then(w => setWeather(w));
     } catch { setError('Настанот не е пронајден.'); }
     setLoading(false);
   };
@@ -196,6 +200,31 @@ export default function EventDetailPage() {
                 >
                   Уреди
                 </Button>
+                {event.status === 'Open' && (
+                  <Button
+                    size="small"
+                    variant={event.isLastMinute ? 'contained' : 'outlined'}
+                    color="warning"
+                    startIcon={<Bolt />}
+                    onClick={async () => {
+                      try {
+                        await eventsApi.toggleLastMinute(event.id);
+                        load();
+                      } catch {}
+                    }}
+                    sx={{
+                      borderRadius: 2,
+                      ...(event.isLastMinute && {
+                        background: 'linear-gradient(135deg, #dc2626, #f59e0b)',
+                        color: '#fff',
+                        animation: 'pulse 2s infinite',
+                        '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.85 } },
+                      }),
+                    }}
+                  >
+                    {event.isLastMinute ? 'Итен повик ✓' : 'Итен повик'}
+                  </Button>
+                )}
                 <Button
                   size="small"
                   color="error"
@@ -248,6 +277,30 @@ export default function EventDetailPage() {
               </Tooltip>
             ))}
           </Box>
+
+          {/* Weather info */}
+          {weather && (
+            <Box
+              display="flex" alignItems="center" gap={1} mb={2}
+              sx={{
+                px: 2, py: 1, borderRadius: 2,
+                bgcolor: weather.isOutdoorFriendly ? alpha('#059669', 0.06) : alpha('#f59e0b', 0.08),
+                border: `1px solid ${weather.isOutdoorFriendly ? alpha('#059669', 0.15) : alpha('#f59e0b', 0.2)}`,
+              }}
+            >
+              <Typography fontSize={24}>{weather.icon}</Typography>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  {weather.temp}°C · {weather.description}
+                </Typography>
+                {weather.warning && (
+                  <Typography variant="caption" color={weather.isOutdoorFriendly ? 'text.secondary' : 'warning.main'} fontWeight={600}>
+                    ⚠ {weather.warning}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
 
           {/* Participant progress bar */}
           <Box>

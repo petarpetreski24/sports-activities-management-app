@@ -21,4 +21,6 @@ public record SportEventDto(
     string? MinSkillLevel,
     string Status,
     double? AvgRating,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsLastMinute = false,
+    DateTime? LastMinuteAt = null);

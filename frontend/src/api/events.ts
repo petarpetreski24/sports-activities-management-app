@@ -43,3 +43,9 @@ export const getMyOrganized = () =>
 
 export const getMyParticipating = () =>
   api.get<SportEvent[]>('/api/events/my?type=participating');
+
+export const toggleLastMinute = (id: number) =>
+  api.post<SportEvent>(`/api/events/${id}/last-minute`);
+
+export const getLastMinute = () =>
+  api.get<SportEvent[]>('/api/events/last-minute');

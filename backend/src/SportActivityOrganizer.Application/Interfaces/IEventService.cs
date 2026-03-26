@@ -10,4 +10,6 @@ public interface IEventService
     Task CancelAsync(int organizerId, int eventId);
     Task<EventSearchResponse> SearchAsync(EventSearchRequest request);
     Task<List<SportEventDto>> GetMyEventsAsync(int userId, string? statusFilter, string? type);
+    Task<SportEventDto> ToggleLastMinuteAsync(int organizerId, int eventId);
+    Task<List<SportEventDto>> GetLastMinuteEventsAsync();
 }

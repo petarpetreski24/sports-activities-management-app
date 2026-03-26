@@ -18,6 +18,7 @@ import { SKILL_LEVEL_LABELS, UserFavoriteSport } from '../../types';
 import AnimatedPage from '../../components/AnimatedPage';
 import { ProfileSkeleton } from '../../components/LoadingSkeleton';
 import GlassCard from '../../components/GlassCard';
+import UserBadges from '../../components/UserBadges';
 import StatCard from '../../components/StatCard';
 import SectionHeader from '../../components/SectionHeader';
 import GradientButton from '../../components/GradientButton';
@@ -127,6 +128,16 @@ export default function ProfilePage() {
             </Box>
           </GlassCard>
         </motion.div>
+
+        {/* Badges */}
+        {user && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <GlassCard hoverEffect={false} sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight={700} mb={1.5}>Беџови</Typography>
+              <UserBadges userId={user.id} />
+            </GlassCard>
+          </motion.div>
+        )}
 
         {/* Stats bar */}
         <Box display="flex" gap={2} mb={3}>

@@ -27,6 +27,11 @@ public class EventApplicationService : IEventApplicationService
         if (sportEvent == null)
             throw new KeyNotFoundException("Event not found.");
 
+        // 2-hour cutoff — can't apply less than 2 hours before event
+        var hoursUntilEvent = (sportEvent.EventDate - DateTime.UtcNow).TotalHours;
+        if (hoursUntilEvent < 2)
+            throw new InvalidOperationException("Пријавувањето е затворено — настанот започнува за помалку од 2 часа.");
+
         // Can't apply to own event
         if (sportEvent.OrganizerId == userId)
             throw new InvalidOperationException("You cannot apply to your own event.");
@@ -135,6 +140,30 @@ public class EventApplicationService : IEventApplicationService
             "Апликација одобрена",
             $"Вашата апликација за \"{application.Event.Title}\" е одобрена!",
             application.EventId);
+
+        // Notify all approved participants that the event is now full
+        if (application.Event.Status == EventStatus.Full)
+        {
+            var approvedParticipants = application.Event.Applications
+                .Where(a => a.Status == ApplicationStatus.Approved && a.UserId != application.UserId)
+                .ToList();
+            foreach (var participant in approvedParticipants)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    participant.UserId,
+                    NotificationType.EventFull,
+                    "Настанот е полн",
+                    $"Настанот \"{application.Event.Title}\" е полн — сите места се пополнети!",
+                    application.EventId);
+            }
+            // Also notify organizer
+            await _notificationService.CreateNotificationAsync(
+                application.Event.OrganizerId,
+                NotificationType.EventFull,
+                "Настанот е полн",
+                $"Вашиот настан \"{application.Event.Title}\" е полн — сите места се пополнети!",
+                application.EventId);
+        }
 
         return await MapToDto(application);
     }

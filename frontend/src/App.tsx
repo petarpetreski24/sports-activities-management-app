@@ -38,6 +38,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import ManageSportsPage from './pages/admin/ManageSportsPage';
 import ManageEventsPage from './pages/admin/ManageEventsPage';
+import ManageReportsPage from './pages/admin/ManageReportsPage';
 
 function HomeRedirect() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -92,6 +93,7 @@ export default function App() {
         <Route path="/admin/users" element={<ProtectedRoute adminOnly><ManageUsersPage /></ProtectedRoute>} />
         <Route path="/admin/sports" element={<ProtectedRoute adminOnly><ManageSportsPage /></ProtectedRoute>} />
         <Route path="/admin/events" element={<ProtectedRoute adminOnly><ManageEventsPage /></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute adminOnly><ManageReportsPage /></ProtectedRoute>} />
       </Route>
 
       {/* Catch-all */}

@@ -163,6 +163,8 @@ public class NotificationService : INotificationService
             NotificationType.EventCancelled => preferences.EmailOnEventUpdate,
             NotificationType.EventReminder => preferences.EmailOnEventReminder,
             NotificationType.NewComment => preferences.EmailOnNewComment,
+            NotificationType.EventFull => preferences.EmailOnEventUpdate,
+            NotificationType.ReportResolved => true,
             _ => false
         };
 

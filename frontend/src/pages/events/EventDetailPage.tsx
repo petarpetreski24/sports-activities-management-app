@@ -4,10 +4,11 @@ import {
   Box, Typography, Grid, Button, Chip, Avatar, Rating, Divider,
   Alert, TextField, IconButton, List, ListItem, ListItemAvatar, ListItemText,
   alpha, Tooltip, LinearProgress, DialogTitle, DialogContent, DialogActions,
+  FormControl, InputLabel, Select, MenuItem,
 } from '@mui/material';
 import {
   CalendarMonth, Timer, Place, Person, CheckCircle, Cancel, Send, Delete,
-  Groups, FitnessCenter, Chat, Star, EditOutlined, CancelOutlined, Bolt,
+  Groups, FitnessCenter, Chat, Star, EditOutlined, CancelOutlined, Bolt, Flag,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SportEvent, EventApplication, EventComment, EventRating, RatableParticipant } from '../../types';
@@ -15,6 +16,7 @@ import * as eventsApi from '../../api/events';
 import * as applicationsApi from '../../api/applications';
 import * as commentsApi from '../../api/comments';
 import * as ratingsApi from '../../api/ratings';
+import * as reportsApi from '../../api/reports';
 import { useAuth } from '../../contexts/AuthContext';
 import { EVENT_STATUS_LABELS, SKILL_LEVEL_LABELS } from '../../types';
 import EventMap from '../../components/EventMap';
@@ -49,6 +51,10 @@ export default function EventDetailPage() {
   const [error, setError] = useState('');
   const [applySuccess, setApplySuccess] = useState(false);
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
+  const [reportDialog, setReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const { isAdmin } = useAuth();
   const isOrganizer = user?.id === event?.organizerId;
@@ -58,9 +64,34 @@ export default function EventDetailPage() {
   const isCompleted = event?.status === 'Completed';
   const isCancelled = event?.status === 'Cancelled';
   const minutesToStart = event ? dayjs(event.eventDate).diff(dayjs(), 'minute') : Infinity;
-  const canApply = minutesToStart > 10;
+  const canApply = minutesToStart > 120;
   const canRate = isCompleted && isApproved && !ratings.some(r => r.reviewerId === user?.id) &&
     dayjs().diff(dayjs(event?.eventDate).add(event?.durationMinutes || 0, 'minute'), 'day') <= 7;
+
+  const REPORT_REASONS = [
+    { value: 'InappropriateBehavior', label: 'Несоодветно однесување' },
+    { value: 'Spam', label: 'Спам' },
+    { value: 'Harassment', label: 'Вознемирување' },
+    { value: 'FakeProfile', label: 'Лажен профил' },
+    { value: 'NoShow', label: 'Недоаѓање на настан' },
+    { value: 'Other', label: 'Друго' },
+  ];
+
+  const handleReport = async () => {
+    if (!reportReason) return;
+    setReportSubmitting(true);
+    try {
+      await reportsApi.create({
+        reportedEventId: event?.id,
+        reason: reportReason,
+        description: reportDescription || undefined,
+      });
+      setReportDialog(false);
+      setReportReason('');
+      setReportDescription('');
+    } catch {}
+    setReportSubmitting(false);
+  };
 
   const load = async () => {
     if (!id) return;
@@ -239,9 +270,16 @@ export default function EventDetailPage() {
             )}
           </Box>
 
-          <Typography variant="h3" fontWeight={800} mb={2} sx={{ lineHeight: 1.2 }}>
-            {event.title}
-          </Typography>
+          <Box display="flex" alignItems="flex-start" gap={1} mb={2}>
+            <Typography variant="h3" fontWeight={800} sx={{ lineHeight: 1.2, flex: 1 }}>
+              {event.title}
+            </Typography>
+            {isAuthenticated && !canManage && (
+              <IconButton size="small" onClick={() => setReportDialog(true)} sx={{ color: 'text.secondary', mt: 0.5 }}>
+                <Flag fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
 
           {/* Horizontal info boxes row */}
           <Box
@@ -421,7 +459,7 @@ export default function EventDetailPage() {
                 </GradientButton>
               ) : (
                 <Alert severity="warning" sx={{ borderRadius: 3 }}>
-                  Пријавувањето е затворено — настанот започнува за помалку од 10 минути.
+                  Пријавувањето е затворено — настанот започнува за помалку од 2 часа.
                 </Alert>
               )}
             </Box>
@@ -937,6 +975,26 @@ export default function EventDetailPage() {
           >
             Отстрани
           </GradientButton>
+        </DialogActions>
+      </AnimatedDialog>
+      {/* Report Dialog */}
+      <AnimatedDialog open={reportDialog} onClose={() => setReportDialog(false)} PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Пријави настан</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 1, mb: 2 }}>
+            <InputLabel>Причина</InputLabel>
+            <Select value={reportReason} onChange={e => setReportReason(e.target.value)} label="Причина">
+              {REPORT_REASONS.map(r => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <TextField fullWidth multiline rows={3} label="Опис (опционално)" value={reportDescription}
+            onChange={e => setReportDescription(e.target.value)} />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setReportDialog(false)} sx={{ borderRadius: 2 }}>Откажи</Button>
+          <GradientButton onClick={handleReport} disabled={!reportReason || reportSubmitting}
+            gradientFrom="#dc2626" gradientTo="#ef4444" hoverFrom="#b91c1c" hoverTo="#dc2626"
+            sx={{ borderRadius: 2 }}>Пријави</GradientButton>
         </DialogActions>
       </AnimatedDialog>
     </AnimatedPage>

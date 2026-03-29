@@ -8,5 +8,7 @@ public enum NotificationType
     EventUpdated,
     EventCancelled,
     EventReminder,
-    NewComment
+    NewComment,
+    EventFull,
+    ReportResolved
 }

@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<ParticipantRating> ParticipantRatings => Set<ParticipantRating>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<Report> Reports => Set<Report>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +31,8 @@ public class AppDbContext : DbContext
         modelBuilder.HasPostgresEnum<EventStatus>();
         modelBuilder.HasPostgresEnum<ApplicationStatus>();
         modelBuilder.HasPostgresEnum<NotificationType>();
+        modelBuilder.HasPostgresEnum<ReportReason>();
+        modelBuilder.HasPostgresEnum<ReportStatus>();
 
         // User
         modelBuilder.Entity<User>(e =>
@@ -127,6 +130,18 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(np => np.UserId).IsUnique();
             e.HasOne(np => np.User).WithOne(u => u.NotificationPreference).HasForeignKey<NotificationPreference>(np => np.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Report
+        modelBuilder.Entity<Report>(e =>
+        {
+            e.Property(r => r.Reason).HasConversion<string>();
+            e.Property(r => r.Status).HasConversion<string>();
+            e.HasOne(r => r.Reporter).WithMany().HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.ReportedUser).WithMany().HasForeignKey(r => r.ReportedUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.ReportedEvent).WithMany().HasForeignKey(r => r.ReportedEventId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.ReportedComment).WithMany().HasForeignKey(r => r.ReportedCommentId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.ResolvedByUser).WithMany().HasForeignKey(r => r.ResolvedByUserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // Seed default sports

@@ -3,7 +3,7 @@ import {
   Box, TextField, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Button, Chip, FormControl,
   InputLabel, Select, MenuItem, TablePagination, Alert,
-  DialogTitle, DialogContent, DialogActions, alpha,
+  Dialog, DialogTitle, DialogContent, DialogActions, alpha,
 } from '@mui/material';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { motion } from 'framer-motion';
@@ -13,7 +13,7 @@ import AnimatedPage from '../../components/AnimatedPage';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import SectionHeader from '../../components/SectionHeader';
 import GlassCard from '../../components/GlassCard';
-import AnimatedDialog from '../../components/AnimatedDialog';
+// AnimatedDialog removed — causes remount/flicker on typing; use plain Dialog
 import GradientButton from '../../components/GradientButton';
 import dayjs from 'dayjs';
 
@@ -156,7 +156,7 @@ export default function ManageReportsPage() {
         </motion.div>
       )}
 
-      <AnimatedDialog open={resolveDialog.open} onClose={() => setResolveDialog({ ...resolveDialog, open: false })}
+      <Dialog open={resolveDialog.open} onClose={() => setResolveDialog({ ...resolveDialog, open: false })}
         PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
         <DialogTitle sx={{ fontWeight: 700 }}>Реши пријава</DialogTitle>
         <DialogContent>
@@ -180,7 +180,7 @@ export default function ManageReportsPage() {
             Зачувај
           </GradientButton>
         </DialogActions>
-      </AnimatedDialog>
+      </Dialog>
     </AnimatedPage>
   );
 }

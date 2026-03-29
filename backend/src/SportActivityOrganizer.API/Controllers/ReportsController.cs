@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SportActivityOrganizer.Application.DTOs.Reports;
 using SportActivityOrganizer.Domain.Entities;
 using SportActivityOrganizer.Domain.Enums;
+using SportActivityOrganizer.Application.Interfaces;
 using SportActivityOrganizer.Infrastructure.Data;
 
 namespace SportActivityOrganizer.API.Controllers;
@@ -15,10 +16,12 @@ namespace SportActivityOrganizer.API.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly INotificationService _notificationService;
 
-    public ReportsController(AppDbContext db)
+    public ReportsController(AppDbContext db, INotificationService notificationService)
     {
         _db = db;
+        _notificationService = notificationService;
     }
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -52,6 +55,21 @@ public class ReportsController : ControllerBase
 
         _db.Reports.Add(report);
         await _db.SaveChangesAsync();
+
+        // Notify all admins about the new report
+        var reporter = await _db.Users.FindAsync(userId);
+        var reporterName = reporter != null ? $"{reporter.FirstName} {reporter.LastName}" : "Непознат";
+        var admins = await _db.Users.Where(u => u.Role == UserRole.Admin && u.IsActive).ToListAsync();
+        foreach (var admin in admins)
+        {
+            await _notificationService.CreateNotificationAsync(
+                admin.Id,
+                NotificationType.ReportResolved,
+                "Нова пријава",
+                $"Корисникот {reporterName} поднесе пријава: {reason}",
+                report.ReportedEventId
+            );
+        }
 
         return Ok(await MapToDto(report));
     }
@@ -125,6 +143,22 @@ public class ReportsController : ControllerBase
         report.ResolvedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        // Notify the reporter that their report was resolved
+        var statusLabel = newStatus switch
+        {
+            ReportStatus.Resolved => "решена",
+            ReportStatus.Dismissed => "отфрлена",
+            ReportStatus.Reviewed => "прегледана",
+            _ => "ажурирана"
+        };
+        await _notificationService.CreateNotificationAsync(
+            report.ReporterId,
+            NotificationType.ReportResolved,
+            "Пријава " + statusLabel,
+            $"Вашата пријава #{report.Id} е {statusLabel}." + (request.AdminNotes != null ? $" Белешка: {request.AdminNotes}" : ""),
+            report.ReportedEventId
+        );
 
         return Ok(await MapToDto(report));
     }

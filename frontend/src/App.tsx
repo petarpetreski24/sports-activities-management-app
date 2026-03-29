@@ -41,15 +41,17 @@ import ManageEventsPage from './pages/admin/ManageEventsPage';
 import ManageReportsPage from './pages/admin/ManageReportsPage';
 
 function HomeRedirect() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
   if (isLoading) return null;
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+  if (!isAuthenticated) return <LandingPage />;
+  return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
 }
 
 function GuestOnly({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
   if (isLoading) return null;
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  if (isAuthenticated) return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
+  return <>{children}</>;
 }
 
 export default function App() {

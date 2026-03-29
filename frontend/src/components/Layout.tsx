@@ -46,7 +46,11 @@ export default function Layout() {
   const isActive = (path: string) =>
     path === '/admin' ? location.pathname.startsWith('/admin') : location.pathname === path;
 
-  const navLinks = [
+  const navLinks = isAdmin ? [
+    { label: 'Админ', path: '/admin', icon: <AdminPanelSettings /> },
+    { label: 'Настани', path: '/events', icon: <Event /> },
+    { label: 'Заедница', path: '/community', icon: <Whatshot /> },
+  ] : [
     { label: 'Почетна', path: '/dashboard', icon: <Dashboard /> },
     { label: 'Настани', path: '/events', icon: <Event /> },
     { label: 'Креирај', path: '/events/create', icon: <Add /> },
@@ -131,37 +135,7 @@ export default function Layout() {
                   {link.label}
                 </Button>
               ))}
-              {isAdmin && (
-                <Button
-                  color="inherit"
-                  component={RouterLink}
-                  to="/admin"
-                  startIcon={<AdminPanelSettings />}
-                  sx={{
-                    borderRadius: 2,
-                    px: 2,
-                    position: 'relative',
-                    '&:hover': { bgcolor: alpha('#fff', 0.08) },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 4,
-                      left: '20%',
-                      right: '20%',
-                      height: 3,
-                      borderRadius: 2,
-                      background: isActive('/admin')
-                        ? 'linear-gradient(90deg, #059669, #3b82f6)'
-                        : 'transparent',
-                      transition: 'all 0.3s ease',
-                    },
-                    color: isActive('/admin') ? '#fff' : alpha('#fff', 0.75),
-                    fontWeight: isActive('/admin') ? 700 : 500,
-                  }}
-                >
-                  Админ
-                </Button>
-              )}
+              {/* Admin link is now part of navLinks for admin users */}
             </Box>
           )}
 
@@ -417,21 +391,7 @@ export default function Layout() {
               </ListItemButton>
             </motion.div>
           ))}
-          {isAdmin && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: navLinks.length * 0.08 }}
-            >
-              <ListItemButton
-                onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
-                sx={{ borderRadius: 2.5, py: 1.2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettings /></ListItemIcon>
-                <ListItemText primary="Админ панел" primaryTypographyProps={{ fontWeight: 500 }} />
-              </ListItemButton>
-            </motion.div>
-          )}
+          {/* Admin link is part of navLinks for admin users */}
         </List>
 
         {/* User info at bottom */}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SportActivityOrganizer.Application.DTOs.Admin;
+using SportActivityOrganizer.Application.DTOs.Events;
 using SportActivityOrganizer.Application.Interfaces;
 
 namespace SportActivityOrganizer.API.Controllers;
@@ -57,5 +58,12 @@ public class AdminController : ControllerBase
     {
         await _adminService.DeleteCommentAsync(id);
         return Ok(new { message = "Коментарот е избришан." });
+    }
+
+    [HttpPost("events/create")]
+    public async Task<ActionResult<SportEventDto>> AdminCreateEvent([FromBody] AdminCreateEventRequest request)
+    {
+        var result = await _adminService.AdminCreateEventAsync(request);
+        return Ok(result);
     }
 }

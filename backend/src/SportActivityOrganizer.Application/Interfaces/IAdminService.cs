@@ -1,4 +1,5 @@
 using SportActivityOrganizer.Application.DTOs.Admin;
+using SportActivityOrganizer.Application.DTOs.Events;
 
 namespace SportActivityOrganizer.Application.Interfaces;
 
@@ -10,4 +11,5 @@ public interface IAdminService
     Task DeleteUserAsync(int userId);
     Task DeleteEventAsync(int eventId);
     Task DeleteCommentAsync(int commentId);
+    Task<SportEventDto> AdminCreateEventAsync(AdminCreateEventRequest request);
 }

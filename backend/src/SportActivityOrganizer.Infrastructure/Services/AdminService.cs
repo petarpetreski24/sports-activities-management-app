@@ -1,9 +1,11 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SportActivityOrganizer.Application.DTOs.Admin;
+using SportActivityOrganizer.Application.DTOs.Events;
 using SportActivityOrganizer.Application.DTOs.Users;
 using SportActivityOrganizer.Application.Interfaces;
 using SportActivityOrganizer.Application.Interfaces.Persistence;
+using SportActivityOrganizer.Domain.Entities;
 using SportActivityOrganizer.Domain.Enums;
 
 namespace SportActivityOrganizer.Infrastructure.Services;
@@ -204,5 +206,101 @@ public class AdminService : IAdminService
 
         comment.IsDeleted = true;
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<SportEventDto> AdminCreateEventAsync(AdminCreateEventRequest request)
+    {
+        var organizer = await _unitOfWork.Users.GetByIdAsync(request.OrganizerId);
+        if (organizer == null)
+            throw new KeyNotFoundException("Организаторот не е пронајден.");
+
+        var sport = await _unitOfWork.Sports.GetByIdAsync(request.SportId);
+        if (sport == null)
+            throw new KeyNotFoundException("Спортот не е пронајден.");
+
+        SkillLevel? minSkillLevel = null;
+        if (request.MinSkillLevel != null)
+        {
+            if (!Enum.TryParse<SkillLevel>(request.MinSkillLevel, true, out var parsed))
+                throw new InvalidOperationException($"Invalid skill level: {request.MinSkillLevel}");
+            minSkillLevel = parsed;
+        }
+
+        var sportEvent = new SportEvent
+        {
+            OrganizerId = request.OrganizerId,
+            SportId = request.SportId,
+            Title = request.Title,
+            Description = request.Description ?? string.Empty,
+            EventDate = DateTime.SpecifyKind(request.EventDate, DateTimeKind.Utc),
+            DurationMinutes = request.DurationMinutes,
+            LocationAddress = request.LocationAddress,
+            LocationLat = (decimal)request.LocationLat,
+            LocationLng = (decimal)request.LocationLng,
+            MaxParticipants = request.MaxParticipants,
+            MinSkillLevel = minSkillLevel,
+            Status = EventStatus.Open,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.SportEvents.AddAsync(sportEvent);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Add confirmed participants
+        var confirmedCount = 0;
+        if (request.ConfirmedParticipantIds?.Any() == true)
+        {
+            foreach (var userId in request.ConfirmedParticipantIds.Distinct())
+            {
+                if (userId == request.OrganizerId) continue; // skip organizer
+
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                if (user == null) continue;
+
+                var application = new EventApplication
+                {
+                    EventId = sportEvent.Id,
+                    UserId = userId,
+                    Status = ApplicationStatus.Approved,
+                    AppliedAt = DateTime.UtcNow,
+                    ResolvedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.EventApplications.AddAsync(application);
+                confirmedCount++;
+            }
+
+            // Update status if full
+            if (confirmedCount >= sportEvent.MaxParticipants)
+                sportEvent.Status = EventStatus.Full;
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return new SportEventDto(
+            Id: sportEvent.Id,
+            OrganizerId: sportEvent.OrganizerId,
+            OrganizerName: $"{organizer.FirstName} {organizer.LastName}",
+            OrganizerPhotoUrl: organizer.ProfilePhotoUrl,
+            OrganizerRating: organizer.AvgRatingAsOrganizer.HasValue ? (double)organizer.AvgRatingAsOrganizer.Value : null,
+            SportId: sportEvent.SportId,
+            SportName: sport.Name,
+            SportIcon: sport.Icon,
+            Title: sportEvent.Title,
+            Description: sportEvent.Description,
+            EventDate: sportEvent.EventDate,
+            DurationMinutes: sportEvent.DurationMinutes,
+            LocationAddress: sportEvent.LocationAddress,
+            LocationLat: (double)sportEvent.LocationLat,
+            LocationLng: (double)sportEvent.LocationLng,
+            MaxParticipants: sportEvent.MaxParticipants,
+            CurrentParticipants: confirmedCount,
+            MinSkillLevel: sportEvent.MinSkillLevel?.ToString(),
+            Status: sportEvent.Status.ToString(),
+            AvgRating: null,
+            CreatedAt: sportEvent.CreatedAt);
     }
 }

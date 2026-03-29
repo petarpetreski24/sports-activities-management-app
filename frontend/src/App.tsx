@@ -39,6 +39,7 @@ import ManageUsersPage from './pages/admin/ManageUsersPage';
 import ManageSportsPage from './pages/admin/ManageSportsPage';
 import ManageEventsPage from './pages/admin/ManageEventsPage';
 import ManageReportsPage from './pages/admin/ManageReportsPage';
+import AdminCreateEventPage from './pages/admin/AdminCreateEventPage';
 
 function HomeRedirect() {
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/admin/sports" element={<ProtectedRoute adminOnly><ManageSportsPage /></ProtectedRoute>} />
         <Route path="/admin/events" element={<ProtectedRoute adminOnly><ManageEventsPage /></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute adminOnly><ManageReportsPage /></ProtectedRoute>} />
+        <Route path="/admin/events/create" element={<ProtectedRoute adminOnly><AdminCreateEventPage /></ProtectedRoute>} />
       </Route>
 
       {/* Catch-all */}

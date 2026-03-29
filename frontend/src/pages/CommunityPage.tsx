@@ -249,7 +249,7 @@ export default function CommunityPage() {
             </Typography>
           </Box>
 
-          <Box sx={{ position: 'relative', width: '100%', aspectRatio: '480/250', overflow: 'hidden' }}>
+          <Box sx={{ position: 'relative', width: '100%', aspectRatio: '480/260', overflow: 'hidden', px: 1 }}>
             <svg viewBox="0 0 480 250" style={{ width: '100%', height: '100%' }}>
               {/* Glow background */}
               <defs>
@@ -360,26 +360,18 @@ export default function CommunityPage() {
           </Box>
 
           {/* Sport legend */}
-          <Box display="flex" gap={1} flexWrap="wrap" p={2} pt={0}>
-            {heatmap?.sportDistribution.slice(0, 6).map((sport, i) => (
-              <Chip
-                key={sport.sportName}
-                label={`${sport.sportName} ${sport.count}`}
-                size="small"
-                sx={{
-                  fontWeight: 600, fontSize: 11,
-                  bgcolor: alpha(SPORT_COLORS[sport.sportName] || '#6b7280', 0.12),
-                  color: SPORT_COLORS[sport.sportName] || '#6b7280',
-                  border: `1px solid ${alpha(SPORT_COLORS[sport.sportName] || '#6b7280', 0.2)}`,
-                  '&::before': {
-                    content: '""',
-                    width: 8, height: 8, borderRadius: '50%',
-                    bgcolor: SPORT_COLORS[sport.sportName] || '#6b7280',
-                    mr: 0.5,
-                  },
-                }}
-              />
-            ))}
+          <Box display="flex" gap={1.5} flexWrap="wrap" px={2.5} py={2}>
+            {heatmap?.sportDistribution.slice(0, 6).map((sport) => {
+              const color = SPORT_COLORS[sport.sportName] || '#6b7280';
+              return (
+                <Box key={sport.sportName} display="flex" alignItems="center" gap={0.75}>
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                  <Typography variant="caption" fontWeight={600} fontSize={12} color="text.secondary">
+                    {sport.sportName} {sport.count}
+                  </Typography>
+                </Box>
+              );
+            })}
           </Box>
         </GlassCard>
       </motion.div>

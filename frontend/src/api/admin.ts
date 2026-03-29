@@ -16,3 +16,18 @@ export const deactivateUser = (id: number) => api.post(`/api/admin/users/${id}/d
 export const deleteUser = (id: number) => api.delete(`/api/admin/users/${id}`);
 export const deleteEvent = (id: number) => api.delete(`/api/admin/events/${id}`);
 export const deleteComment = (id: number) => api.delete(`/api/admin/comments/${id}`);
+
+export const adminCreateEvent = (data: {
+  organizerId: number;
+  sportId: number;
+  title: string;
+  description?: string;
+  eventDate: string;
+  durationMinutes: number;
+  locationAddress: string;
+  locationLat: number;
+  locationLng: number;
+  maxParticipants: number;
+  minSkillLevel?: string;
+  confirmedParticipantIds?: number[];
+}) => api.post('/api/admin/events/create', data);

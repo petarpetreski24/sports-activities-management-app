@@ -26,6 +26,14 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
+        // FR-1.5: Password validation — min 8 chars, at least one uppercase, at least one digit
+        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
+            throw new ArgumentException("Лозинката мора да содржи најмалку 8 карактери.");
+        if (!request.Password.Any(char.IsUpper))
+            throw new ArgumentException("Лозинката мора да содржи најмалку една голема буква.");
+        if (!request.Password.Any(char.IsDigit))
+            throw new ArgumentException("Лозинката мора да содржи најмалку една цифра.");
+
         var existingUser = await _unitOfWork.Users
             .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
 

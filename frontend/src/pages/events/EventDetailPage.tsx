@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Grid, Button, Chip, Avatar, Rating, Divider,
   Alert, TextField, IconButton, List, ListItem, ListItemAvatar, ListItemText,
-  alpha, Tooltip, LinearProgress, DialogTitle, DialogContent, DialogActions,
+  alpha, Tooltip, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, MenuItem,
 } from '@mui/material';
 import {
@@ -29,6 +29,15 @@ import GradientButton from '../../components/GradientButton';
 import AnimatedDialog from '../../components/AnimatedDialog';
 import { getWeatherForEvent, WeatherInfo } from '../../utils/weather';
 import dayjs from 'dayjs';
+
+const REPORT_REASONS = [
+  { value: 'InappropriateBehavior', label: 'Несоодветно однесување' },
+  { value: 'Spam', label: 'Спам' },
+  { value: 'Harassment', label: 'Вознемирување' },
+  { value: 'FakeProfile', label: 'Лажен профил' },
+  { value: 'NoShow', label: 'Недоаѓање на настан' },
+  { value: 'Other', label: 'Друго' },
+];
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -67,15 +76,6 @@ export default function EventDetailPage() {
   const canApply = minutesToStart > 120;
   const canRate = isCompleted && isApproved && !ratings.some(r => r.reviewerId === user?.id) &&
     dayjs().diff(dayjs(event?.eventDate).add(event?.durationMinutes || 0, 'minute'), 'day') <= 7;
-
-  const REPORT_REASONS = [
-    { value: 'InappropriateBehavior', label: 'Несоодветно однесување' },
-    { value: 'Spam', label: 'Спам' },
-    { value: 'Harassment', label: 'Вознемирување' },
-    { value: 'FakeProfile', label: 'Лажен профил' },
-    { value: 'NoShow', label: 'Недоаѓање на настан' },
-    { value: 'Other', label: 'Друго' },
-  ];
 
   const handleReport = async () => {
     if (!reportReason) return;
@@ -977,8 +977,8 @@ export default function EventDetailPage() {
           </GradientButton>
         </DialogActions>
       </AnimatedDialog>
-      {/* Report Dialog */}
-      <AnimatedDialog open={reportDialog} onClose={() => setReportDialog(false)} PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
+      {/* Report Dialog — uses plain Dialog to avoid AnimatedDialog remount on typing */}
+      <Dialog open={reportDialog} onClose={() => setReportDialog(false)} PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
         <DialogTitle sx={{ fontWeight: 700 }}>Пријави настан</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 1, mb: 2 }}>
@@ -996,7 +996,7 @@ export default function EventDetailPage() {
             gradientFrom="#dc2626" gradientTo="#ef4444" hoverFrom="#b91c1c" hoverTo="#dc2626"
             sx={{ borderRadius: 2 }}>Пријави</GradientButton>
         </DialogActions>
-      </AnimatedDialog>
+      </Dialog>
     </AnimatedPage>
   );
 }

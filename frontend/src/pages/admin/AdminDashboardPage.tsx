@@ -13,6 +13,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { motion } from 'framer-motion';
 import * as adminApi from '../../api/admin';
 import * as eventsApi from '../../api/events';
@@ -243,6 +244,21 @@ export default function AdminDashboardPage() {
             sx={{ py: 2, borderRadius: 3 }}
           >
             Управувај настани
+          </GradientButton>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <GradientButton
+            fullWidth
+            size="large"
+            startIcon={<ReportProblemIcon />}
+            gradientFrom="#dc2626"
+            gradientTo="#f87171"
+            hoverFrom="#b91c1c"
+            hoverTo="#dc2626"
+            {...{ component: RouterLink, to: '/admin/reports' } as any}
+            sx={{ py: 2, borderRadius: 3 }}
+          >
+            Пријави
           </GradientButton>
         </Grid>
       </Grid>

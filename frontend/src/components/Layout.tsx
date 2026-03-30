@@ -271,32 +271,36 @@ export default function Layout() {
                   <Typography variant="subtitle2" fontWeight={700}>{user?.firstName} {user?.lastName}</Typography>
                   <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
                 </Box>
-                <MenuItem
-                  onClick={() => { setAnchorEl(null); navigate('/profile'); }}
-                  sx={{
-                    py: 1.5,
-                    mx: 1,
-                    borderRadius: 2,
-                    my: 0.5,
-                    transition: 'all 0.2s',
-                    '&:hover': { bgcolor: alpha('#1a56db', 0.06) },
-                  }}
-                >
-                  <Person sx={{ mr: 1.5, color: 'primary.main', fontSize: 20 }} /> Мој профил
-                </MenuItem>
-                <MenuItem
-                  onClick={() => { setAnchorEl(null); navigate('/my-events'); }}
-                  sx={{
-                    py: 1.5,
-                    mx: 1,
-                    borderRadius: 2,
-                    my: 0.5,
-                    transition: 'all 0.2s',
-                    '&:hover': { bgcolor: alpha('#059669', 0.06) },
-                  }}
-                >
-                  <EventNote sx={{ mr: 1.5, color: 'secondary.main', fontSize: 20 }} /> Мои настани
-                </MenuItem>
+                {!isAdmin && (
+                  <>
+                    <MenuItem
+                      onClick={() => { setAnchorEl(null); navigate('/profile'); }}
+                      sx={{
+                        py: 1.5,
+                        mx: 1,
+                        borderRadius: 2,
+                        my: 0.5,
+                        transition: 'all 0.2s',
+                        '&:hover': { bgcolor: alpha('#1a56db', 0.06) },
+                      }}
+                    >
+                      <Person sx={{ mr: 1.5, color: 'primary.main', fontSize: 20 }} /> Мој профил
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => { setAnchorEl(null); navigate('/my-events'); }}
+                      sx={{
+                        py: 1.5,
+                        mx: 1,
+                        borderRadius: 2,
+                        my: 0.5,
+                        transition: 'all 0.2s',
+                        '&:hover': { bgcolor: alpha('#059669', 0.06) },
+                      }}
+                    >
+                      <EventNote sx={{ mr: 1.5, color: 'secondary.main', fontSize: 20 }} /> Мои настани
+                    </MenuItem>
+                  </>
+                )}
                 <Divider sx={{ mx: 1 }} />
                 <MenuItem
                   onClick={handleLogout}

@@ -2,6 +2,10 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- EF Core abstractions for async LINQ (Include/ToListAsync) used by the
+         use-case services. The concrete provider (Npgsql) stays in Infrastructure. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
   </ItemGroup>
 
   <ItemGroup>

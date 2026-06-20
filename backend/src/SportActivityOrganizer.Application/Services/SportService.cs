@@ -5,7 +5,7 @@ using SportActivityOrganizer.Application.Interfaces;
 using SportActivityOrganizer.Application.Interfaces.Persistence;
 using SportActivityOrganizer.Domain.Entities;
 
-namespace SportActivityOrganizer.Infrastructure.Services;
+namespace SportActivityOrganizer.Application.Services;
 
 public class SportService : ISportService
 {

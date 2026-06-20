@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SportActivityOrganizer.Application.Interfaces;
 using SportActivityOrganizer.Application.Interfaces.Persistence;
+using SportActivityOrganizer.Application.Services;
 using SportActivityOrganizer.Infrastructure.Data;
 using SportActivityOrganizer.Infrastructure.Persistence;
 using SportActivityOrganizer.Infrastructure.Services;

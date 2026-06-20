@@ -6,7 +6,7 @@ using SportActivityOrganizer.Application.Interfaces.Persistence;
 using SportActivityOrganizer.Domain.Entities;
 using SportActivityOrganizer.Domain.Enums;
 
-namespace SportActivityOrganizer.Infrastructure.Services;
+namespace SportActivityOrganizer.Application.Services;
 
 public class EventService : IEventService
 {

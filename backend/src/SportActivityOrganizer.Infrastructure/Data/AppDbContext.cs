@@ -25,14 +25,18 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Store enums as strings
-        modelBuilder.HasPostgresEnum<UserRole>();
-        modelBuilder.HasPostgresEnum<SkillLevel>();
-        modelBuilder.HasPostgresEnum<EventStatus>();
-        modelBuilder.HasPostgresEnum<ApplicationStatus>();
-        modelBuilder.HasPostgresEnum<NotificationType>();
-        modelBuilder.HasPostgresEnum<ReportReason>();
-        modelBuilder.HasPostgresEnum<ReportStatus>();
+        // Postgres enum types — only registered for the Npgsql provider so the
+        // model also builds under non-relational providers (e.g. EF InMemory in tests).
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.HasPostgresEnum<UserRole>();
+            modelBuilder.HasPostgresEnum<SkillLevel>();
+            modelBuilder.HasPostgresEnum<EventStatus>();
+            modelBuilder.HasPostgresEnum<ApplicationStatus>();
+            modelBuilder.HasPostgresEnum<NotificationType>();
+            modelBuilder.HasPostgresEnum<ReportReason>();
+            modelBuilder.HasPostgresEnum<ReportStatus>();
+        }
 
         // User
         modelBuilder.Entity<User>(e =>

@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportActivityOrganizer.Doma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportActivityOrganizer.Infrastructure", "src\SportActivityOrganizer.Infrastructure\SportActivityOrganizer.Infrastructure.csproj", "{CF90F22E-0B30-4295-B05E-C799D322AE63}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EBFE402C-C43A-432B-B044-309D32171ABA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportActivityOrganizer.Tests", "tests\SportActivityOrganizer.Tests\SportActivityOrganizer.Tests.csproj", "{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,11 +42,16 @@ Global
 		{CF90F22E-0B30-4295-B05E-C799D322AE63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF90F22E-0B30-4295-B05E-C799D322AE63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF90F22E-0B30-4295-B05E-C799D322AE63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B31C5750-854E-4EBF-B648-55076E246A8A} = {2A437323-3E34-4B07-A4E5-8DCC1029089F}
 		{2526E924-1154-4536-8BB5-30EE7650236E} = {2A437323-3E34-4B07-A4E5-8DCC1029089F}
 		{7C05E0DD-755A-493A-8BD6-3A148B00F180} = {2A437323-3E34-4B07-A4E5-8DCC1029089F}
 		{CF90F22E-0B30-4295-B05E-C799D322AE63} = {2A437323-3E34-4B07-A4E5-8DCC1029089F}
+		{A1CFE65D-01A8-4BAC-A324-A5D4A126C9A0} = {EBFE402C-C43A-432B-B044-309D32171ABA}
 	EndGlobalSection
 EndGlobal

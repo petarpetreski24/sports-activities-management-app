@@ -99,11 +99,16 @@ builder.Services.AddCors(options =>
         var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
             ?? new[] { "http://localhost:3000", "http://localhost:5173" };
 
-        // Also allow APP_FRONTEND_URL env var (for Railway / production)
+        // Also allow APP_FRONTEND_URL env var (for Railway / production).
+        // Supports a comma-separated list so multiple frontends (custom domain
+        // + Railway URL) can be permitted at once.
         var frontendUrl = Environment.GetEnvironmentVariable("APP_FRONTEND_URL");
         if (!string.IsNullOrEmpty(frontendUrl))
         {
-            allowedOrigins = allowedOrigins.Append(frontendUrl.TrimEnd('/')).Distinct().ToArray();
+            var extra = frontendUrl
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(o => o.TrimEnd('/'));
+            allowedOrigins = allowedOrigins.Concat(extra).Distinct().ToArray();
         }
 
         policy.WithOrigins(allowedOrigins)

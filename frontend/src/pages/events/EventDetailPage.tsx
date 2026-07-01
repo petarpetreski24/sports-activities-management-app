@@ -55,6 +55,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cancelDialog, setCancelDialog] = useState(false);
   const [removeDialog, setRemoveDialog] = useState<{ userId: number; userName: string } | null>(null);
+  const [approveConfirm, setApproveConfirm] = useState<{ app: EventApplication; otherPending: number } | null>(null);
   const [removeReason, setRemoveReason] = useState('');
   const [peerRatings, setPeerRatings] = useState<Record<number, { rating: number; comment: string }>>({});
   const [error, setError] = useState('');
@@ -881,7 +882,14 @@ export default function EventDetailPage() {
                         <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
                           {!isCompleted && app.status === 'Pending' ? (
                             <>
-                              <IconButton size="small" color="success" onClick={() => applicationsApi.approve(event.id, app.id).then(load)}>
+                              <IconButton size="small" color="success" onClick={() => {
+                                const otherPending = applications.filter(a => a.status === 'Pending' && a.id !== app.id).length;
+                                if ((event.currentParticipants + 1) >= event.maxParticipants && otherPending > 0) {
+                                  setApproveConfirm({ app, otherPending });
+                                } else {
+                                  applicationsApi.approve(event.id, app.id).then(load);
+                                }
+                              }}>
                                 <CheckCircle />
                               </IconButton>
                               <IconButton size="small" color="error" onClick={() => applicationsApi.reject(event.id, app.id).then(load)}>
@@ -915,6 +923,39 @@ export default function EventDetailPage() {
           )}
         </Grid>
       </Grid>
+
+      {/* Approve last-spot confirmation */}
+      <AnimatedDialog
+        open={!!approveConfirm}
+        onClose={() => setApproveConfirm(null)}
+        PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Одобри го последното место?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Со одобрување на <strong>{approveConfirm?.app.userName}</strong> сите места се пополнуваат.
+            Настанот ќе биде означен како <strong>„Полн“</strong>, а преостанатите{' '}
+            <strong>{approveConfirm?.otherPending}</strong> пријави што чекаат ќе бидат автоматски одбиени.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setApproveConfirm(null)} sx={{ borderRadius: 2 }}>Откажи</Button>
+          <GradientButton
+            gradientFrom="#1a56db"
+            gradientTo="#059669"
+            hoverFrom="#1e3a5f"
+            hoverTo="#064e3b"
+            onClick={() => {
+              if (approveConfirm) {
+                applicationsApi.approve(event.id, approveConfirm.app.id).then(() => { setApproveConfirm(null); load(); });
+              }
+            }}
+            sx={{ borderRadius: 2 }}
+          >
+            Одобри и затвори
+          </GradientButton>
+        </DialogActions>
+      </AnimatedDialog>
 
       {/* Cancel Event Dialog */}
       <AnimatedDialog

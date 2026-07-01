@@ -125,10 +125,23 @@ public class EventApplicationService : IEventApplicationService
         var approvedCount = application.Event.Applications
             .Count(a => a.Status == ApplicationStatus.Approved);
 
+        // When the event fills up, auto-reject all remaining pending applications
+        // (the event becomes locked) and commit everything in one transaction.
+        var autoRejected = new List<EventApplication>();
         if (approvedCount >= application.Event.MaxParticipants)
         {
             application.Event.Status = EventStatus.Full;
             application.Event.UpdatedAt = DateTime.UtcNow;
+
+            autoRejected = application.Event.Applications
+                .Where(a => a.Status == ApplicationStatus.Pending && a.Id != application.Id)
+                .ToList();
+            foreach (var pa in autoRejected)
+            {
+                pa.Status = ApplicationStatus.Rejected;
+                pa.ResolvedAt = DateTime.UtcNow;
+                pa.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         await _unitOfWork.SaveChangesAsync();
@@ -162,6 +175,17 @@ public class EventApplicationService : IEventApplicationService
                 NotificationType.EventFull,
                 "Настанот е полн",
                 $"Вашиот настан \"{application.Event.Title}\" е полн — сите места се пополнети!",
+                application.EventId);
+        }
+
+        // Notify everyone whose pending application was auto-rejected because the event filled up
+        foreach (var pa in autoRejected)
+        {
+            await _notificationService.CreateNotificationAsync(
+                pa.UserId,
+                NotificationType.ApplicationRejected,
+                "Апликација одбиена",
+                $"Настанот \"{application.Event.Title}\" е пополнет, па вашата пријава е автоматски одбиена.",
                 application.EventId);
         }
 
